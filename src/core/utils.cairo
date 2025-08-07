@@ -47,6 +47,31 @@ func bitwise_divmod{bitwise_ptr: BitwiseBuiltin*}(x: felt, y: felt) -> (q: felt,
     }
 }
 
+// Returns the number of bits in x.
+// Implicits arguments:
+// - pow2_array: felt* - A pointer such that pow2_array[i] = 2^i for i in [0, 127].
+// Params:
+// - x: felt - Input value.
+// Assumptions for the caller:
+// - 1 <= x < 2^127
+// Returns:
+// - bit_length: felt - Number of bits in x.
+func get_felt_bitlength{range_check_ptr, pow2_array: felt*}(x: felt) -> felt {
+    alloc_locals;
+    local bit_length;
+    %{ ids.bit_length = ids.x.bit_length() %}
+    // Computes N=2^bit_length and n=2^(bit_length-1)
+    // x is supposed to verify n = 2^(b-1) <= x < N = 2^bit_length <=> x has bit_length bits
+    tempvar N = pow2_array[bit_length];
+    tempvar n = pow2_array[bit_length - 1];
+    assert [range_check_ptr] = bit_length;
+    assert [range_check_ptr + 1] = 127 - bit_length;
+    assert [range_check_ptr + 2] = N - x - 1;
+    assert [range_check_ptr + 3] = x - n;
+    tempvar range_check_ptr = range_check_ptr + 4;
+    return bit_length;
+}
+
 // Utility to get a pointer on an array of 2^i from i = 0 to 128.
 func pow2alloc128() -> (array: felt*) {
     let (data_address) = get_label_location(data);
