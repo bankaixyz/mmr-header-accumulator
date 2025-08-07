@@ -1,4 +1,5 @@
 from starkware.cairo.common.registers import get_fp_and_pc, get_label_location
+from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 // Returns q and r such that:
 //  0 <= q < rc_bound, 0 <= r < div and value = q * div + r.
@@ -21,6 +22,29 @@ func felt_divmod{range_check_ptr}(value, div) -> (q: felt, r: felt) {
 
     assert value = q * div + r;
     return (q, r);
+}
+
+
+// Computes x//y and x%y.
+// Assumption: y must be a power of 2
+// params:
+//   x: the dividend.
+//   y: the divisor.
+// returns:
+//   q: the quotient.
+//   r: the remainder.
+func bitwise_divmod{bitwise_ptr: BitwiseBuiltin*}(x: felt, y: felt) -> (q: felt, r: felt) {
+    if (y == 1) {
+        let bitwise_ptr = bitwise_ptr;
+        return (q=x, r=0);
+    } else {
+        assert bitwise_ptr.x = x;
+        assert bitwise_ptr.y = y - 1;
+        let x_and_y = bitwise_ptr.x_and_y;
+
+        let bitwise_ptr = bitwise_ptr + BitwiseBuiltin.SIZE;
+        return (q=(x - x_and_y) / y, r=x_and_y);
+    }
 }
 
 // Utility to get a pointer on an array of 2^i from i = 0 to 128.
