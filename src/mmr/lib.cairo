@@ -145,14 +145,17 @@ func init_mmr{
         let (new_mmr_root_poseidon: felt, new_mmr_root_keccak: Uint256) = get_roots();
     }
 
+    assert end_mmr_snapshot.poseidon_root = new_mmr_root_poseidon;
+    assert end_mmr_snapshot.keccak_root.low = new_mmr_root_keccak.low;
+    assert end_mmr_snapshot.keccak_root.high = new_mmr_root_keccak.high;
+    assert end_mmr_snapshot.size = mmr_array_len + mmr_offset;
+
     print_felt_hex(new_mmr_root_poseidon);
     print_uint256(new_mmr_root_keccak);
     print_felt(mmr_array_len + mmr_offset);
 
     default_dict_finalize(dict_start_poseidon, previous_peaks_dict_poseidon, 0);
     default_dict_finalize(dict_start_keccak, previous_peaks_dict_keccak, 0);
-
-
 
     return ();
 }
