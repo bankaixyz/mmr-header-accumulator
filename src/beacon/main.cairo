@@ -8,8 +8,9 @@ from src.core.sha import SHA256
 from src.core.utils import pow2alloc128
 from src.debug.lib import print_uint256, print_string
 from src.mmr.leaf_hash import poseidon_uint256, keccak_uint256
-
-from src.mmr.lib import init_mmr
+from src.mmr.types import MmrSnapshot, LastLeafProof
+from src.mmr.lib import grow_mmr
+from src.mmr.utils import hash_subtree_path_poseidon, hash_subtree_path_keccak, assert_is_last_leaf_in_mmr
 
 func main{
     output_ptr: felt*,
@@ -26,10 +27,15 @@ func main{
     let (inputs: BeaconHeader*) = alloc();
     local n_headers: felt;
 
-    let previous_root = Uint256(low=0xa57e66a87a2e77d6c22675607e621c39, high=0xfad68dc38d7685970d9ba89a0cc32790);
 
+
+
+    let last_leaf = Uint256(low=0xf5a3686f05bfb2e369b62c31f53d4b09, high=0x8758a6cbf77e53b51c0ba9c8f8573d06);
     let poseidon_hashes: felt* = alloc();
     let keccak_hashes: Uint256* = alloc();
+
+    local start_mmr_snapshot: MmrSnapshot;
+    local end_mmr_snapshot: MmrSnapshot;
 
     %{
         def split_128(value: str) -> list[int]:
@@ -46,6 +52,7 @@ func main{
 
             return [low_int, high_int]
 
+        # Write headers
         headers = program_input["chain_integrations"][0]["headers"]
         counter = 0
         for i, header in enumerate(headers):
@@ -58,10 +65,62 @@ func main{
 
         ids.n_headers = len(headers)
         print(f"n_headers: {ids.n_headers}")
+
+        start_mmr_data = program_input['chain_integrations'][0]['start_mmr']
+        end_mmr_data = program_input['chain_integrations'][0]['end_mmr']
+
+        # Write MMR Data
+        ids.start_mmr_snapshot.size = start_mmr_data['elements_count']
+        ids.start_mmr_snapshot.poseidon_root = int(start_mmr_data['poseidon_root'], 16)
+        
+        keccak_root_split = split_128(start_mmr_data['keccak_root'])
+        ids.start_mmr_snapshot.keccak_root.low = keccak_root_split[0]
+        ids.start_mmr_snapshot.keccak_root.high = keccak_root_split[1]
+
+        ids.start_mmr_snapshot.peaks_len = len(start_mmr_data['poseidon_peaks'])
+
+        poseidon_peaks_ptr = segments.add()
+        ids.start_mmr_snapshot.poseidon_peaks = poseidon_peaks_ptr
+        poseidon_peaks_data = [int(p, 16) for p in start_mmr_data['poseidon_peaks']]
+        segments.write_arg(poseidon_peaks_ptr, poseidon_peaks_data)
+
+        keccak_peaks_ptr = segments.add()
+        ids.start_mmr_snapshot.keccak_peaks = keccak_peaks_ptr
+        keccak_peaks_data = []
+        for p in start_mmr_data['keccak_peaks']:
+            split_peak = split_128(p)
+            keccak_peaks_data.extend(split_peak)
+        segments.write_arg(keccak_peaks_ptr, keccak_peaks_data)
+
+        # Write end_mmr
+        ids.end_mmr_snapshot.size = end_mmr_data['elements_count']
+        ids.end_mmr_snapshot.poseidon_root = int(end_mmr_data['poseidon_root'], 16)
+        
+        keccak_root_split = split_128(end_mmr_data['keccak_root'])
+        ids.end_mmr_snapshot.keccak_root.low = keccak_root_split[0]
+        ids.end_mmr_snapshot.keccak_root.high = keccak_root_split[1]
+
+        ids.end_mmr_snapshot.peaks_len = len(end_mmr_data['poseidon_peaks'])
+
+        poseidon_peaks_ptr = segments.add()
+        ids.end_mmr_snapshot.poseidon_peaks = poseidon_peaks_ptr
+        poseidon_peaks_data = [int(p, 16) for p in end_mmr_data['poseidon_peaks']]
+        segments.write_arg(poseidon_peaks_ptr, poseidon_peaks_data)
+
+        keccak_peaks_ptr = segments.add()
+        ids.end_mmr_snapshot.keccak_peaks = keccak_peaks_ptr
+        keccak_peaks_data = []
+        for p in end_mmr_data['keccak_peaks']:
+            split_peak = split_128(p)
+            keccak_peaks_data.extend(split_peak)
+        segments.write_arg(keccak_peaks_ptr, keccak_peaks_data)
+
+        print("Start MMR size: ", ids.start_mmr_snapshot.size)
+        print("End MMR size: ", ids.end_mmr_snapshot.size)
     %}
     with pow2_array, sha256_ptr {
         assert_header_linkage(
-            previous_root=previous_root,
+            previous_root=last_leaf,
             headers=inputs,
             count=n_headers,
             poseidon_hashes=poseidon_hashes,
@@ -69,12 +128,48 @@ func main{
         );
     }
     with pow2_array {
-        init_mmr(keccak_leafs=keccak_hashes, poseidon_leafs=poseidon_hashes, n_headers=n_headers);
+        grow_mmr(start_mmr_snapshot=start_mmr_snapshot, end_mmr_snapshot=end_mmr_snapshot, keccak_leafs=keccak_hashes, poseidon_leafs=poseidon_hashes, n_headers=n_headers);
     }
 
     // SHA256.finalize(sha256_start_ptr=sha256_ptr_start, sha256_end_ptr=sha256_ptr);
     return ();
 }
+
+// To ensure we dont have any gaps in the MMR, we verify the proof of the last leaf of each MMR
+// this should then be the parent_root of the first header we add to the MMR
+func verify_last_leaf{
+    range_check_ptr,
+    bitwise_ptr: BitwiseBuiltin*,
+    keccak_ptr: KeccakBuiltin*,
+    poseidon_ptr: PoseidonBuiltin*,
+    pow2_array: felt*,
+}(proof: LastLeafProof, start_mmr: MmrSnapshot) {
+    alloc_locals;
+
+    let (poseidon_leaf) = poseidon_uint256(leaf=proof.header_root);
+
+    let (peak_poseidon, peak_poseidon_pos, _) = hash_subtree_path_poseidon(
+        element=poseidon_leaf,
+        height=0,
+        position=proof.header_position,
+        inclusion_proof=proof.poseidon_path,
+        inclusion_proof_len=proof.path_len,
+    );
+
+    let (keccak_leaf) = keccak_uint256(leaf=proof.header_root);
+    let (peak_keccak, peak_keccak_pos, _) = hash_subtree_path_keccak(
+        element=keccak_leaf,
+        height=0,
+        position=proof.header_position,
+        inclusion_proof=proof.keccak_path,
+        inclusion_proof_len=proof.path_len,
+    );
+
+    assert_is_last_leaf_in_mmr(mmr_size=start_mmr.size, position=proof.header_position);
+
+    return ();
+}
+
 
 func assert_header_linkage{
     range_check_ptr,

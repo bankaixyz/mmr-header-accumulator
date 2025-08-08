@@ -473,3 +473,155 @@ func bag_peaks{
     let (res_keccak) = uint256_reverse_endian(res_keccak);
     return (res_poseidon, res_keccak);
 }
+
+// Hashes a subtree path from a leaf up to its peak in the MMR using Poseidon.
+// Decides left/right at each step from MMR positions via height comparison.
+// Params:
+// - element: felt - current node value (start with the leaf hash)
+// - height: felt - current node height in the MMR (leaves are height 0; increment by 1 per level up)
+// - position: felt - current MMR position of the node (1-indexed as in compute_height_pre_alloc_pow2)
+// - inclusion_proof: felt* - siblings from leaf to peak (left-to-right in ascent order)
+// - inclusion_proof_len: felt - number of siblings to consume
+// Returns:
+// - peak: felt - computed peak value for this subtree
+// - peak_pos: felt - MMR position of the resulting peak
+// - peak_height: felt - height of the resulting peak
+// Orientation rule:
+// - If compute_height(pos+1) == compute_height(pos) + 1, element is a right child.
+//   Parent position is pos + 1 and hash order is H(sibling, element).
+// - Else element is a left child. Parent position is pos + 2^(height+1) and hash
+//   order is H(element, sibling).
+func hash_subtree_path_poseidon{
+    range_check_ptr,
+    poseidon_ptr: PoseidonBuiltin*,
+    pow2_array: felt*,
+}(
+    element: felt,
+    height: felt,
+    position: felt,
+    inclusion_proof: felt*,
+    inclusion_proof_len: felt,
+) -> (peak: felt, peak_pos: felt, peak_height: felt) {
+    alloc_locals;
+    if (inclusion_proof_len == 0) {
+        return (peak=element, peak_pos=position, peak_height=height);
+    }
+
+    let position_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position);
+    let next_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position + 1);
+
+    if (next_height == position_height + 1) {
+        // element is right child: parent at position + 1, H(sibling, element)
+        let (parent) = poseidon_hash([inclusion_proof], element);
+        return hash_subtree_path_poseidon(
+            parent,
+            height + 1,
+            position + 1,
+            inclusion_proof=inclusion_proof + 1,
+            inclusion_proof_len=inclusion_proof_len - 1,
+        );
+    } else {
+        // element is left child: parent at position + 2^(height+1) - 1, H(element, sibling)
+        let (parent) = poseidon_hash(element, [inclusion_proof]);
+        let next_pos = position + pow2_array[height + 1];
+        return hash_subtree_path_poseidon(
+            parent,
+            height + 1,
+            next_pos,
+            inclusion_proof=inclusion_proof + 1,
+            inclusion_proof_len=inclusion_proof_len - 1,
+        );
+    }
+}
+
+// Hashes a subtree path from a leaf up to its peak in the MMR using Keccak over Uint256.
+// Decides left/right at each step from MMR positions via height comparison.
+// Params:
+// - element: Uint256 - current node value (start with the leaf hash)
+// - height: felt - current node height in the MMR (leaves are height 0; increment by 1 per level up)
+// - position: felt - current MMR position of the node (1-indexed as in compute_height_pre_alloc_pow2)
+// - inclusion_proof: Uint256* - siblings from leaf to peak (left-to-right in ascent order)
+// - inclusion_proof_len: felt - number of siblings to consume
+// Returns:
+// - peak: Uint256 - computed peak value for this subtree
+// - peak_pos: felt - MMR position of the resulting peak
+// - peak_height: felt - height of the resulting peak
+// Orientation rule:
+// - If compute_height(pos+1) == compute_height(pos) + 1, element is a right child.
+//   Parent position is pos + 1 and Keccak is computed as Keccak(sibling, element).
+// - Else element is a left child. Parent position is pos + 2^(height+1) and Keccak
+//   is computed as Keccak(element, sibling).
+func hash_subtree_path_keccak{
+    range_check_ptr,
+    bitwise_ptr: BitwiseBuiltin*,
+    keccak_ptr: KeccakBuiltin*,
+    pow2_array: felt*,
+}(
+    element: Uint256,
+    height: felt,
+    position: felt,
+    inclusion_proof: Uint256*,
+    inclusion_proof_len: felt,
+) -> (peak: Uint256, peak_pos: felt, peak_height: felt) {
+    alloc_locals;
+    if (inclusion_proof_len == 0) {
+        return (peak=element, peak_pos=position, peak_height=height);
+    }
+
+    let position_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position);
+    let next_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position + 1);
+
+    if (next_height == position_height + 1) {
+        // element is right child: parent at position + 1, Keccak(sibling, element)
+        let (buf: felt*) = alloc();
+        let buf_start = buf;
+        keccak_add_uint256{inputs=buf}(num=[inclusion_proof], bigend=1);
+        keccak_add_uint256{inputs=buf}(num=element, bigend=1);
+        let (parent_be: Uint256) = keccak(inputs=buf_start, n_bytes=2 * 32);
+        let (parent) = uint256_reverse_endian(parent_be);
+        return hash_subtree_path_keccak(
+            parent,
+            height + 1,
+            position + 1,
+            inclusion_proof=inclusion_proof + Uint256.SIZE,
+            inclusion_proof_len=inclusion_proof_len - 1,
+        );
+    } else {
+        // element is left child: parent at position + 2^(height+1) - 1, Keccak(element, sibling)
+        let (buf2: felt*) = alloc();
+        let buf2_start = buf2;
+        keccak_add_uint256{inputs=buf2}(num=element, bigend=1);
+        keccak_add_uint256{inputs=buf2}(num=[inclusion_proof], bigend=1);
+        let (parent_be2: Uint256) = keccak(inputs=buf2_start, n_bytes=2 * 32);
+        let (parent2) = uint256_reverse_endian(parent_be2);
+        let next_pos = position + pow2_array[height + 1];
+        return hash_subtree_path_keccak(
+            parent2,
+            height + 1,
+            next_pos,
+            inclusion_proof=inclusion_proof + Uint256.SIZE,
+            inclusion_proof_len=inclusion_proof_len - 1,
+        );
+    }
+}
+
+// Asserts that a given MMR position is the last leaf in the entire MMR of size mmr_size.
+// Ensure the mmr size is valid before using this function.
+func assert_is_last_leaf_in_mmr{range_check_ptr, pow2_array: felt*}(mmr_size: felt, position: felt) {
+    alloc_locals;
+
+    // Get rightmost peak
+    let (peaks_positions: felt*, peaks_len: felt) = compute_peaks_positions{pow2_array=pow2_array}(mmr_size);
+    let last_peak_pos = peaks_positions[peaks_len - 1];
+
+    // Derive last leaf under that peak
+    let last_peak_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(last_peak_pos);
+    let expected_last_leaf_pos = last_peak_pos - last_peak_height;
+
+    // Ensure candidate is a leaf and equals expected position
+    let candidate_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position);
+    assert 0 = candidate_height;
+    assert position = expected_last_leaf_pos;
+
+    return ();
+}

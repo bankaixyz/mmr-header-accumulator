@@ -12,13 +12,13 @@ from src.mmr.utils import assert_mmr_size_is_valid, compute_peaks_positions, bag
 from src.mmr.types import MmrSnapshot
 from src.debug.lib import print_felt_hex, print_uint256, print_felt
 
-func init_mmr{
+func grow_mmr{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
     keccak_ptr: KeccakBuiltin*,
     poseidon_ptr: PoseidonBuiltin*,
     pow2_array: felt*,
-}(keccak_leafs: Uint256*, poseidon_leafs: felt*, n_headers: felt) {
+}(start_mmr_snapshot: MmrSnapshot, end_mmr_snapshot: MmrSnapshot, keccak_leafs: Uint256*, poseidon_leafs: felt*, n_headers: felt) {
     alloc_locals;
 
     local start_mmr_snapshot: MmrSnapshot;
