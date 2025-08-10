@@ -256,8 +256,8 @@ func left_child_jump_until_inside_mmr{range_check_ptr, pow2_array: felt*, mmr_le
 // - mmr_array_poseidon: array of new nodes of the Poseidon MMR
 // - mmr_array_keccak: array of new nodes of the Keccak MMR
 // - mmr_offset: offset of the MMR (previous MMR length). Must be a validated MMR size. (see assert_mmr_size_is_valid function)
-// - previous_peaks_dict_poseidon: dictionary of previous peaks for Poseidon
-// - previous_peaks_dict_keccak: dictionary of previous peaks for Keccak
+// - peaks_dict_poseidon: dictionary of previous peaks for Poseidon
+// - peaks_dict_keccak: dictionary of previous peaks for Keccak
 // Params:
 // - position: felt - position in the MMR. Must be a correct left or right child position to be merged in the current MMR state.
 // Returns:
@@ -272,8 +272,8 @@ func get_full_mmr_peak_values{
     mmr_array_poseidon: felt*,
     mmr_array_keccak: Uint256*,
     mmr_offset: felt,
-    previous_peaks_dict_poseidon: DictAccess*,
-    previous_peaks_dict_keccak: DictAccess*,
+    peaks_dict_poseidon: DictAccess*,
+    peaks_dict_keccak: DictAccess*,
 }(position: felt) -> (peak_poseidon: felt, peak_keccak: Uint256) {
     alloc_locals;
     // %{ print(f"Asked position : {ids.position}, mmr_offset : {ids.mmr_offset}") %}
@@ -297,9 +297,9 @@ func get_full_mmr_peak_values{
         // ensure position <= mmr_offset
         assert [range_check_ptr] = mmr_offset - position;
         tempvar range_check_ptr = range_check_ptr + 1;
-        let (peak_poseidon: felt) = dict_read{dict_ptr=previous_peaks_dict_poseidon}(key=position);
+        let (peak_poseidon: felt) = dict_read{dict_ptr=peaks_dict_poseidon}(key=position);
         // Treat the felt value from dict back to a Uint256 ptr:
-        let (peak_keccak_ptr: Uint256*) = dict_read{dict_ptr=previous_peaks_dict_keccak}(
+        let (peak_keccak_ptr: Uint256*) = dict_read{dict_ptr=peaks_dict_keccak}(
             key=position
         );
         local peak_keccak: Uint256;
@@ -320,14 +320,14 @@ func get_full_mmr_peak_values{
 // - mmr_array_keccak: Uint256* - array of new nodes of the Keccak MMR
 // - mmr_array_len: felt - length of the MMR array.
 // - pow2_array: felt* - array of powers of 2
-// - previous_peaks_dict_poseidon: DictAccess* - dictionary of previous peaks for Poseidon MMR.
+// - peaks_dict_poseidon: DictAccess* - dictionary of previous peaks for Poseidon MMR.
 // - mmr_offset: offset of the MMR (size of the previous MMR).
 // Requirements for the caller:
 // Both dicts must be initialized with previous peaks at the correct positions.
 // mmr_array_len must be positive >= 1
 // mmr_offset must be a validated MMR size. (see assert_mmr_size_is_valid function)
 // mmr_array+mmr_offset must be a validated MMR size. (see assert_mmr_size_is_valid function)
-// - previous_peaks_dict_keccak: DictAccess* - dictionary of previous peaks for Keccak MMR
+// - peaks_dict_keccak: DictAccess* - dictionary of previous peaks for Keccak MMR
 // Returns:
 // - root_poseidon: felt - root of the Poseidon MMR
 // - root_keccak: Uint256 - root of the Keccak MMR
@@ -340,8 +340,8 @@ func get_roots{
     mmr_array_keccak: Uint256*,
     mmr_array_len: felt,
     pow2_array: felt*,
-    previous_peaks_dict_poseidon: DictAccess*,
-    previous_peaks_dict_keccak: DictAccess*,
+    peaks_dict_poseidon: DictAccess*,
+    peaks_dict_keccak: DictAccess*,
     mmr_offset: felt,
 }() -> (root_poseidon: felt, root_keccak: Uint256) {
     alloc_locals;
@@ -372,8 +372,8 @@ func get_roots{
 // - mmr_array_poseidon: felt* - array of new nodes of the Poseidon MMR
 // - mmr_array_keccak: Uint256* - array of new nodes of the Keccak MMR
 // - mmr_offset: felt - offset of the MMR (previous MMR length)
-// - previous_peaks_dict_poseidon: DictAccess* - dictionary of previous peaks for Poseidon MMR
-// - previous_peaks_dict_keccak: DictAccess* - dictionary of previous peaks for Keccak MMR
+// - peaks_dict_poseidon: DictAccess* - dictionary of previous peaks for Poseidon MMR
+// - peaks_dict_keccak: DictAccess* - dictionary of previous peaks for Keccak MMR
 // - peaks_positions: felt* - array of positions of the peaks
 // Params:
 // - peaks_len: felt - length of the peaks_positions array.
@@ -385,8 +385,8 @@ func get_peaks_from_positions{
     mmr_array_poseidon: felt*,
     mmr_array_keccak: Uint256*,
     mmr_offset: felt,
-    previous_peaks_dict_poseidon: DictAccess*,
-    previous_peaks_dict_keccak: DictAccess*,
+    peaks_dict_poseidon: DictAccess*,
+    peaks_dict_keccak: DictAccess*,
     peaks_positions: felt*,
 }(peaks_len: felt) -> (peaks_poseidon: felt*, peaks_keccak: Uint256*) {
     alloc_locals;
@@ -401,8 +401,8 @@ func get_peaks_from_positions{
 // - mmr_array_poseidon: felt* - array of new nodes of the Poseidon MMR
 // - mmr_array_keccak: Uint256* - array of new nodes of the Keccak MMR
 // - mmr_offset: felt - offset of the MMR (previous MMR length)
-// - previous_peaks_dict_poseidon: DictAccess* - dictionary of previous peaks for Poseidon MMR
-// - previous_peaks_dict_keccak: DictAccess* - dictionary of previous peaks for Keccak MMR
+// - peaks_dict_poseidon: DictAccess* - dictionary of previous peaks for Poseidon MMR
+// - peaks_dict_keccak: DictAccess* - dictionary of previous peaks for Keccak MMR
 // - peaks_positions: felt* - array of positions of the peaks
 // Params:
 // - peaks_poseidon: felt* - array of peaks values for Poseidon MMR (to be filled)
@@ -413,8 +413,8 @@ func get_peaks_from_positions_inner{
     mmr_array_poseidon: felt*,
     mmr_array_keccak: Uint256*,
     mmr_offset: felt,
-    previous_peaks_dict_poseidon: DictAccess*,
-    previous_peaks_dict_keccak: DictAccess*,
+    peaks_dict_poseidon: DictAccess*,
+    peaks_dict_keccak: DictAccess*,
     peaks_positions: felt*,
 }(peaks_poseidon: felt*, peaks_keccak: Uint256*, index: felt) {
     alloc_locals;
@@ -472,137 +472,6 @@ func bag_peaks{
     let (res_keccak: Uint256) = keccak(inputs=inputs_start, n_bytes=2 * 32);
     let (res_keccak) = uint256_reverse_endian(res_keccak);
     return (res_poseidon, res_keccak);
-}
-
-// Hashes a subtree path from a leaf up to its peak in the MMR using Poseidon.
-// Decides left/right at each step from MMR positions via height comparison.
-// Params:
-// - element: felt - current node value (start with the leaf hash)
-// - height: felt - current node height in the MMR (leaves are height 0; increment by 1 per level up)
-// - position: felt - current MMR position of the node (1-indexed as in compute_height_pre_alloc_pow2)
-// - inclusion_proof: felt* - siblings from leaf to peak (left-to-right in ascent order)
-// - inclusion_proof_len: felt - number of siblings to consume
-// Returns:
-// - peak: felt - computed peak value for this subtree
-// - peak_pos: felt - MMR position of the resulting peak
-// - peak_height: felt - height of the resulting peak
-// Orientation rule:
-// - If compute_height(pos+1) == compute_height(pos) + 1, element is a right child.
-//   Parent position is pos + 1 and hash order is H(sibling, element).
-// - Else element is a left child. Parent position is pos + 2^(height+1) and hash
-//   order is H(element, sibling).
-func hash_subtree_path_poseidon{
-    range_check_ptr,
-    poseidon_ptr: PoseidonBuiltin*,
-    pow2_array: felt*,
-}(
-    element: felt,
-    height: felt,
-    position: felt,
-    inclusion_proof: felt*,
-    inclusion_proof_len: felt,
-) -> (peak: felt, peak_pos: felt, peak_height: felt) {
-    alloc_locals;
-    if (inclusion_proof_len == 0) {
-        return (peak=element, peak_pos=position, peak_height=height);
-    }
-
-    let position_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position);
-    let next_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position + 1);
-
-    if (next_height == position_height + 1) {
-        // element is right child: parent at position + 1, H(sibling, element)
-        let (parent) = poseidon_hash([inclusion_proof], element);
-        return hash_subtree_path_poseidon(
-            parent,
-            height + 1,
-            position + 1,
-            inclusion_proof=inclusion_proof + 1,
-            inclusion_proof_len=inclusion_proof_len - 1,
-        );
-    } else {
-        // element is left child: parent at position + 2^(height+1) - 1, H(element, sibling)
-        let (parent) = poseidon_hash(element, [inclusion_proof]);
-        let next_pos = position + pow2_array[height + 1];
-        return hash_subtree_path_poseidon(
-            parent,
-            height + 1,
-            next_pos,
-            inclusion_proof=inclusion_proof + 1,
-            inclusion_proof_len=inclusion_proof_len - 1,
-        );
-    }
-}
-
-// Hashes a subtree path from a leaf up to its peak in the MMR using Keccak over Uint256.
-// Decides left/right at each step from MMR positions via height comparison.
-// Params:
-// - element: Uint256 - current node value (start with the leaf hash)
-// - height: felt - current node height in the MMR (leaves are height 0; increment by 1 per level up)
-// - position: felt - current MMR position of the node (1-indexed as in compute_height_pre_alloc_pow2)
-// - inclusion_proof: Uint256* - siblings from leaf to peak (left-to-right in ascent order)
-// - inclusion_proof_len: felt - number of siblings to consume
-// Returns:
-// - peak: Uint256 - computed peak value for this subtree
-// - peak_pos: felt - MMR position of the resulting peak
-// - peak_height: felt - height of the resulting peak
-// Orientation rule:
-// - If compute_height(pos+1) == compute_height(pos) + 1, element is a right child.
-//   Parent position is pos + 1 and Keccak is computed as Keccak(sibling, element).
-// - Else element is a left child. Parent position is pos + 2^(height+1) and Keccak
-//   is computed as Keccak(element, sibling).
-func hash_subtree_path_keccak{
-    range_check_ptr,
-    bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
-    pow2_array: felt*,
-}(
-    element: Uint256,
-    height: felt,
-    position: felt,
-    inclusion_proof: Uint256*,
-    inclusion_proof_len: felt,
-) -> (peak: Uint256, peak_pos: felt, peak_height: felt) {
-    alloc_locals;
-    if (inclusion_proof_len == 0) {
-        return (peak=element, peak_pos=position, peak_height=height);
-    }
-
-    let position_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position);
-    let next_height = compute_height_pre_alloc_pow2{pow2_array=pow2_array}(position + 1);
-
-    if (next_height == position_height + 1) {
-        // element is right child: parent at position + 1, Keccak(sibling, element)
-        let (buf: felt*) = alloc();
-        let buf_start = buf;
-        keccak_add_uint256{inputs=buf}(num=[inclusion_proof], bigend=1);
-        keccak_add_uint256{inputs=buf}(num=element, bigend=1);
-        let (parent_be: Uint256) = keccak(inputs=buf_start, n_bytes=2 * 32);
-        let (parent) = uint256_reverse_endian(parent_be);
-        return hash_subtree_path_keccak(
-            parent,
-            height + 1,
-            position + 1,
-            inclusion_proof=inclusion_proof + Uint256.SIZE,
-            inclusion_proof_len=inclusion_proof_len - 1,
-        );
-    } else {
-        // element is left child: parent at position + 2^(height+1) - 1, Keccak(element, sibling)
-        let (buf2: felt*) = alloc();
-        let buf2_start = buf2;
-        keccak_add_uint256{inputs=buf2}(num=element, bigend=1);
-        keccak_add_uint256{inputs=buf2}(num=[inclusion_proof], bigend=1);
-        let (parent_be2: Uint256) = keccak(inputs=buf2_start, n_bytes=2 * 32);
-        let (parent2) = uint256_reverse_endian(parent_be2);
-        let next_pos = position + pow2_array[height + 1];
-        return hash_subtree_path_keccak(
-            parent2,
-            height + 1,
-            next_pos,
-            inclusion_proof=inclusion_proof + Uint256.SIZE,
-            inclusion_proof_len=inclusion_proof_len - 1,
-        );
-    }
 }
 
 // Asserts that a given MMR position is the last leaf in the entire MMR of size mmr_size.
