@@ -11,7 +11,7 @@ from starkware.cairo.common.registers import get_fp_and_pc
 from src.mmr.types import MmrSnapshot
 from src.mmr.core import initialize_peaks_dicts, construct_mmr
 from src.mmr.utils import assert_mmr_size_is_valid, compute_peaks_positions, bag_peaks, get_full_mmr_peak_values, compute_height_pre_alloc_pow2 as compute_height, get_roots
-from src.debug.lib import print_felt_hex, print_uint256, print_felt
+from src.debug.lib import print_felt_hex, print_uint256, print_felt, print_string
 
 
 func initialize_peaks{
@@ -138,6 +138,13 @@ func finalize_mmr{
     assert end_mmr_snapshot.keccak_root.low = new_mmr_root_keccak.low;
     assert end_mmr_snapshot.keccak_root.high = new_mmr_root_keccak.high;
     assert end_mmr_snapshot.size = new_mmr_size;
+
+    print_string('New Poseidon root: ');
+    print_felt_hex(new_mmr_root_poseidon);
+    print_string('New Keccak root: ');
+    print_uint256(new_mmr_root_keccak);
+    print_string('New MMR size: '); 
+    print_felt(new_mmr_size);
 
     return ();
 }

@@ -8,7 +8,7 @@ from starkware.cairo.common.dict import dict_write, dict_read
 from starkware.cairo.common.uint256 import Uint256, uint256_reverse_endian
 from starkware.cairo.common.builtin_keccak.keccak import keccak
 from starkware.cairo.common.keccak_utils.keccak_utils import keccak_add_uint256
-from src.libs.utils import get_felt_bitlength
+from src.core.utils import get_felt_bitlength
 
 // Asserts that the MMR size is valid given:
 // - our condition on size (1 <= x <= 2^126)

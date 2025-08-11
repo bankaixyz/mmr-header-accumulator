@@ -1,7 +1,8 @@
 [workspace]
 resolver = "2"
 
-members = ["cairo_vm_hints"]
+
+members = ["evm-grower-hints"]
 
 [workspace.dependencies]
 bincode = { version = "2.0.1", default-features = false, features = ["serde"] }
@@ -21,6 +22,6 @@ starknet-crypto = "0.7.2"
 starknet-types-core = "0.1.7"
 thiserror = "1.0.64"
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
-
-eth_essentials_cairo_vm_hints = { git = "https://github.com/HerodotusDev/eth_essentials.git", rev = "0e982d8114a165c89bed9c1bf7742846d23f1189" }
 serde_json = "1.0.132"
+alloy-primitives = "0.8.13"
+evm-grower-hints = { path = "evm-grower-hints" }

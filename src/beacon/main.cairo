@@ -27,120 +27,124 @@ func main{
     let pow2_array: felt* = pow2alloc128();
     let (sha256_ptr, sha256_ptr_start) = SHA256.init();
 
-    let (inputs: BeaconHeader*) = alloc();
+    let (headers: BeaconHeader*) = alloc();
     local n_headers: felt;
 
     local start_mmr_snapshot: MmrSnapshot;
     local end_mmr_snapshot: MmrSnapshot;
     local last_leaf_proof: LastLeafProof;
 
-    %{
-        def split_128(value: str) -> list[int]:
-            if value.startswith("0x"):
-                value = value[2:]
+    %{ write_beacon_input() %}
+
+    print_string('done');
+
+    // %{
+    //     def split_128(value: str) -> list[int]:
+    //         if value.startswith("0x"):
+    //             value = value[2:]
             
-            value = value.zfill(64)
+    //         value = value.zfill(64)
 
-            high_hex = value[:32]
-            low_hex = value[32:]
+    //         high_hex = value[:32]
+    //         low_hex = value[32:]
 
-            low_int = int(low_hex, 16)
-            high_int = int(high_hex, 16)
+    //         low_int = int(low_hex, 16)
+    //         high_int = int(high_hex, 16)
 
-            return [low_int, high_int]
+    //         return [low_int, high_int]
 
-        # Write headers
-        headers = program_input["chain_integrations"][0]["headers"]
-        counter = 0
-        for i, header in enumerate(headers):
+    //     # Write headers
+    //     headers = program_input["chain_integrations"][0]["headers"]
+    //     counter = 0
+    //     for i, header in enumerate(headers):
 
-            memory[ids.inputs._reference_value + i * 8] = int(header["header"]['slot'], 10)
-            memory[ids.inputs._reference_value + i * 8 + 1] = int(header["header"]['proposer_index'], 10)
-            memory[ids.inputs._reference_value + i * 8 + 2], memory[ids.inputs._reference_value + i * 8 + 3] = split_128(header["header"]['parent_root'])
-            memory[ids.inputs._reference_value + i * 8 + 4], memory[ids.inputs._reference_value + i * 8 + 5] = split_128(header["header"]['state_root'])
-            memory[ids.inputs._reference_value + i * 8 + 6], memory[ids.inputs._reference_value + i * 8 + 7] = split_128(header["header"]['body_root'])
+    //         memory[ids.headers._reference_value + i * 8] = int(header["header"]['slot'], 10)
+    //         memory[ids.headers._reference_value + i * 8 + 1] = int(header["header"]['proposer_index'], 10)
+    //         memory[ids.headers._reference_value + i * 8 + 2], memory[ids.headers._reference_value + i * 8 + 3] = split_128(header["header"]['parent_root'])
+    //         memory[ids.headers._reference_value + i * 8 + 4], memory[ids.headers._reference_value + i * 8 + 5] = split_128(header["header"]['state_root'])
+    //         memory[ids.headers._reference_value + i * 8 + 6], memory[ids.headers._reference_value + i * 8 + 7] = split_128(header["header"]['body_root'])
 
-        ids.n_headers = len(headers)
-        print(f"n_headers: {ids.n_headers}")
+    //     ids.n_headers = len(headers)
+    //     print(f"n_headers: {ids.n_headers}")
 
-        start_mmr_data = program_input['chain_integrations'][0]['start_mmr']
-        end_mmr_data = program_input['chain_integrations'][0]['end_mmr']
+    //     start_mmr_data = program_input['chain_integrations'][0]['start_mmr']
+    //     end_mmr_data = program_input['chain_integrations'][0]['end_mmr']
 
-        # Write MMR Data
-        ids.start_mmr_snapshot.size = start_mmr_data['elements_count']
-        ids.start_mmr_snapshot.poseidon_root = int(start_mmr_data['poseidon_root'], 16)
+    //     # Write MMR Data
+    //     ids.start_mmr_snapshot.size = start_mmr_data['elements_count']
+    //     ids.start_mmr_snapshot.poseidon_root = int(start_mmr_data['poseidon_root'], 16)
         
-        keccak_root_split = split_128(start_mmr_data['keccak_root'])
-        ids.start_mmr_snapshot.keccak_root.low = keccak_root_split[0]
-        ids.start_mmr_snapshot.keccak_root.high = keccak_root_split[1]
+    //     keccak_root_split = split_128(start_mmr_data['keccak_root'])
+    //     ids.start_mmr_snapshot.keccak_root.low = keccak_root_split[0]
+    //     ids.start_mmr_snapshot.keccak_root.high = keccak_root_split[1]
 
-        ids.start_mmr_snapshot.peaks_len = len(start_mmr_data['poseidon_peaks'])
+    //     ids.start_mmr_snapshot.peaks_len = len(start_mmr_data['poseidon_peaks'])
 
-        poseidon_peaks_ptr = segments.add()
-        ids.start_mmr_snapshot.poseidon_peaks = poseidon_peaks_ptr
-        poseidon_peaks_data = [int(p, 16) for p in start_mmr_data['poseidon_peaks']]
-        segments.write_arg(poseidon_peaks_ptr, poseidon_peaks_data)
+    //     poseidon_peaks_ptr = segments.add()
+    //     ids.start_mmr_snapshot.poseidon_peaks = poseidon_peaks_ptr
+    //     poseidon_peaks_data = [int(p, 16) for p in start_mmr_data['poseidon_peaks']]
+    //     segments.write_arg(poseidon_peaks_ptr, poseidon_peaks_data)
 
-        keccak_peaks_ptr = segments.add()
-        ids.start_mmr_snapshot.keccak_peaks = keccak_peaks_ptr
-        keccak_peaks_data = []
-        for p in start_mmr_data['keccak_peaks']:
-            split_peak = split_128(p)
-            keccak_peaks_data.extend(split_peak)
-        segments.write_arg(keccak_peaks_ptr, keccak_peaks_data)
+    //     keccak_peaks_ptr = segments.add()
+    //     ids.start_mmr_snapshot.keccak_peaks = keccak_peaks_ptr
+    //     keccak_peaks_data = []
+    //     for p in start_mmr_data['keccak_peaks']:
+    //         split_peak = split_128(p)
+    //         keccak_peaks_data.extend(split_peak)
+    //     segments.write_arg(keccak_peaks_ptr, keccak_peaks_data)
 
-        # Write end_mmr
-        ids.end_mmr_snapshot.size = end_mmr_data['elements_count']
-        ids.end_mmr_snapshot.poseidon_root = int(end_mmr_data['poseidon_root'], 16)
+    //     # Write end_mmr
+    //     ids.end_mmr_snapshot.size = end_mmr_data['elements_count']
+    //     ids.end_mmr_snapshot.poseidon_root = int(end_mmr_data['poseidon_root'], 16)
         
-        keccak_root_split = split_128(end_mmr_data['keccak_root'])
-        ids.end_mmr_snapshot.keccak_root.low = keccak_root_split[0]
-        ids.end_mmr_snapshot.keccak_root.high = keccak_root_split[1]
+    //     keccak_root_split = split_128(end_mmr_data['keccak_root'])
+    //     ids.end_mmr_snapshot.keccak_root.low = keccak_root_split[0]
+    //     ids.end_mmr_snapshot.keccak_root.high = keccak_root_split[1]
 
-        ids.end_mmr_snapshot.peaks_len = len(end_mmr_data['poseidon_peaks'])
+    //     ids.end_mmr_snapshot.peaks_len = len(end_mmr_data['poseidon_peaks'])
 
-        poseidon_peaks_ptr = segments.add()
-        ids.end_mmr_snapshot.poseidon_peaks = poseidon_peaks_ptr
-        poseidon_peaks_data = [int(p, 16) for p in end_mmr_data['poseidon_peaks']]
-        segments.write_arg(poseidon_peaks_ptr, poseidon_peaks_data)
+    //     poseidon_peaks_ptr = segments.add()
+    //     ids.end_mmr_snapshot.poseidon_peaks = poseidon_peaks_ptr
+    //     poseidon_peaks_data = [int(p, 16) for p in end_mmr_data['poseidon_peaks']]
+    //     segments.write_arg(poseidon_peaks_ptr, poseidon_peaks_data)
 
-        keccak_peaks_ptr = segments.add()
-        ids.end_mmr_snapshot.keccak_peaks = keccak_peaks_ptr
-        keccak_peaks_data = []
-        for p in end_mmr_data['keccak_peaks']:
-            split_peak = split_128(p)
-            keccak_peaks_data.extend(split_peak)
-        segments.write_arg(keccak_peaks_ptr, keccak_peaks_data)
+    //     keccak_peaks_ptr = segments.add()
+    //     ids.end_mmr_snapshot.keccak_peaks = keccak_peaks_ptr
+    //     keccak_peaks_data = []
+    //     for p in end_mmr_data['keccak_peaks']:
+    //         split_peak = split_128(p)
+    //         keccak_peaks_data.extend(split_peak)
+    //     segments.write_arg(keccak_peaks_ptr, keccak_peaks_data)
 
-        # Write last leaf proof
-        last_leaf = program_input['chain_integrations'][0]['last_leaf_proof']
+    //     # Write last leaf proof
+    //     last_leaf = program_input['chain_integrations'][0]['last_leaf_proof']
 
-        # Header root as Uint256
-        header_root_split = split_128(last_leaf['header_root'])
-        ids.last_leaf_proof.header_root.low = header_root_split[0]
-        ids.last_leaf_proof.header_root.high = header_root_split[1]
+    //     # Header root as Uint256
+    //     header_root_split = split_128(last_leaf['header_root'])
+    //     ids.last_leaf_proof.header_root.low = header_root_split[0]
+    //     ids.last_leaf_proof.header_root.high = header_root_split[1]
 
-        # Scalars
-        ids.last_leaf_proof.header_position = int(last_leaf['header_position'])
-        ids.last_leaf_proof.path_len = int(last_leaf['path_len'])
+    //     # Scalars
+    //     ids.last_leaf_proof.header_position = int(last_leaf['header_position'])
+    //     ids.last_leaf_proof.path_len = int(last_leaf['path_len'])
 
-        # Poseidon path (felt*)
-        poseidon_path_ptr = segments.add()
-        ids.last_leaf_proof.poseidon_path = poseidon_path_ptr
-        poseidon_path_data = [int(p, 16) for p in last_leaf['poseidon_path']]
-        segments.write_arg(poseidon_path_ptr, poseidon_path_data)
+    //     # Poseidon path (felt*)
+    //     poseidon_path_ptr = segments.add()
+    //     ids.last_leaf_proof.poseidon_path = poseidon_path_ptr
+    //     poseidon_path_data = [int(p, 16) for p in last_leaf['poseidon_path']]
+    //     segments.write_arg(poseidon_path_ptr, poseidon_path_data)
 
-        # Keccak path (Uint256*)
-        keccak_path_ptr = segments.add()
-        ids.last_leaf_proof.keccak_path = keccak_path_ptr
-        keccak_path_data = []
-        for k in last_leaf['keccak_path']:
-            keccak_path_data.extend(split_128(k))
-        segments.write_arg(keccak_path_ptr, keccak_path_data)
+    //     # Keccak path (Uint256*)
+    //     keccak_path_ptr = segments.add()
+    //     ids.last_leaf_proof.keccak_path = keccak_path_ptr
+    //     keccak_path_data = []
+    //     for k in last_leaf['keccak_path']:
+    //         keccak_path_data.extend(split_128(k))
+    //     segments.write_arg(keccak_path_ptr, keccak_path_data)
 
-        print("Start MMR size: ", ids.start_mmr_snapshot.size)
-        print("End MMR size: ", ids.end_mmr_snapshot.size)
-    %}
+    //     print("Start MMR size: ", ids.start_mmr_snapshot.size)
+    //     print("End MMR size: ", ids.end_mmr_snapshot.size)
+    // %}
 
     with pow2_array {
         let (
@@ -161,7 +165,7 @@ func main{
     with pow2_array, sha256_ptr {
         assert_header_linkage(
             previous_root=last_leaf_proof.header_root,
-            headers=inputs,
+            headers=headers,
             count=n_headers,
             poseidon_hashes=poseidon_hashes,
             keccak_hashes=keccak_hashes,

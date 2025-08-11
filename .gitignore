@@ -29,3 +29,4 @@ src/.DS_Store
 solidity-verifier/lib/*
 
 target
+output

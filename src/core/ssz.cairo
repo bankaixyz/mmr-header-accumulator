@@ -245,27 +245,3 @@ namespace MerkleUtils {
         return (Uint256(low=low, high=high));
     }
 }
-
-
-// func main{
-//     output_ptr: felt*,
-//     range_check_ptr,
-//     bitwise_ptr: BitwiseBuiltin*,
-//     poseidon_ptr: PoseidonBuiltin*,
-//     range_check96_ptr: felt*,
-//     add_mod_ptr: ModBuiltin*,
-//     mul_mod_ptr: ModBuiltin*,
-// }() {
-//     alloc_locals;
-
-//     let (pow2_array) = pow2alloc128();
-//     let (sha256_ptr, sha256_ptr_start) = SHA256.init();
-
-//     with pow2_array, sha256_ptr {
-//         SSZ.hash_execution_payload_header_root();
-//     }
-
-//     SHA256.finalize(sha256_ptr_start, sha256_ptr);
-
-//     return ();
-// }
