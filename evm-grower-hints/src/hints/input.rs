@@ -1,6 +1,6 @@
 use rust_vm_hints::cairo_type::{CairoType, CairoWritable};
-use rust_vm_hints::types::{felt::Felt, uint256::Uint256};
 use rust_vm_hints::types::serde_utils::{deserialize_from_any, deserialize_vec_from_string};
+use rust_vm_hints::types::{felt::Felt, uint256::Uint256};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -93,7 +93,10 @@ impl CairoWritable for MmrSnapshot {
         &self,
         vm: &mut rust_vm_hints::vm::cairo_vm::vm::vm_core::VirtualMachine,
         address: rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable,
-    ) -> Result<rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable, rust_vm_hints::vm::cairo_vm::vm::errors::hint_errors::HintError> {
+    ) -> Result<
+        rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable,
+        rust_vm_hints::vm::cairo_vm::vm::errors::hint_errors::HintError,
+    > {
         let address_start = address;
         let address = self.size.to_memory(vm, address)?;
         let address = self.poseidon_root.to_memory(vm, address)?;
@@ -134,7 +137,10 @@ impl CairoWritable for LastLeafProof {
         &self,
         vm: &mut rust_vm_hints::vm::cairo_vm::vm::vm_core::VirtualMachine,
         address: rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable,
-    ) -> Result<rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable, rust_vm_hints::vm::cairo_vm::vm::errors::hint_errors::HintError> {
+    ) -> Result<
+        rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable,
+        rust_vm_hints::vm::cairo_vm::vm::errors::hint_errors::HintError,
+    > {
         let address_start = address;
         let address = self.header_root.to_memory(vm, address)?;
         let address = self.header_position.to_memory(vm, address)?;
@@ -173,7 +179,10 @@ impl CairoWritable for BeaconHeader {
         &self,
         vm: &mut rust_vm_hints::vm::cairo_vm::vm::vm_core::VirtualMachine,
         address: rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable,
-    ) -> Result<rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable, rust_vm_hints::vm::cairo_vm::vm::errors::hint_errors::HintError> {
+    ) -> Result<
+        rust_vm_hints::vm::cairo_vm::types::relocatable::Relocatable,
+        rust_vm_hints::vm::cairo_vm::vm::errors::hint_errors::HintError,
+    > {
         let address_start = address;
         let address = self.slot.to_memory(vm, address)?;
         let address = self.proposer_index.to_memory(vm, address)?;

@@ -1,10 +1,3 @@
-use rust_vm_hints::vm::cairo_vm::{
-    hint_processor::builtin_hint_processor::builtin_hint_processor_definition::HintProcessorData,
-    types::exec_scope::ExecutionScopes,
-    vm::{errors::hint_errors::HintError, vm_core::VirtualMachine},
-    Felt252,
-};
-use std::collections::HashMap;
 
 pub mod input;
 pub mod mmr;
@@ -27,4 +20,3 @@ pub mod mmr;
 //         hint_data.code.to_string().into_boxed_str(),
 //     ))
 // }
-

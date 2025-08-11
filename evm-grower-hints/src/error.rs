@@ -1,14 +1,12 @@
-use thiserror::Error;   
 use rust_vm_hints::vm::cairo_vm::{
     cairo_run::EncodeTraceError,
     types::errors::program_errors::ProgramError,
     vm::errors::{
-        cairo_run_errors::CairoRunError,
-        trace_errors::TraceError,
+        cairo_run_errors::CairoRunError, runner_errors::RunnerError, trace_errors::TraceError,
         vm_errors::VirtualMachineError,
-        runner_errors::RunnerError
     },
 };
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {

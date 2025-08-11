@@ -1,15 +1,17 @@
-use evm_grower_hints::{
-    error::Error,
-    hint_processor::CustomHintProcessor,
-    hints::input::{MmrInput},
-};
-use rust_vm_hints::vm::cairo_vm::{
-    cairo_run::{self, cairo_run_program_with_initial_scope, write_encoded_memory, write_encoded_trace},
-    types::{exec_scope::ExecutionScopes, layout_name::LayoutName, program::Program},
-    vm::{errors::trace_errors::TraceError, runners::cairo_runner::CairoRunner, runners::cairo_pie::CairoPie},
-};
+#![allow(clippy::result_large_err)]
+use evm_grower_hints::{error::Error, hint_processor::CustomHintProcessor, hints::input::MmrInput};
 use rust_vm_hints::stwo_utils::FileWriter;
-use std::{io, io::Write, path::Path};
+use rust_vm_hints::vm::cairo_vm::{
+    cairo_run::{
+        self, cairo_run_program_with_initial_scope, write_encoded_memory, write_encoded_trace,
+    },
+    types::{exec_scope::ExecutionScopes, layout_name::LayoutName, program::Program},
+    vm::{
+        errors::trace_errors::TraceError, runners::cairo_pie::CairoPie,
+        runners::cairo_runner::CairoRunner,
+    },
+};
+use std::{io, path::Path};
 
 fn load_program(path: &str) -> Result<Program, Error> {
     // Check if it's an absolute path that doesn't exist, try relative
@@ -37,11 +39,7 @@ fn load_program(path: &str) -> Result<Program, Error> {
     Ok(program)
 }
 
-pub fn run_stwo(
-    path: &str,
-    input: MmrInput,
-    output_dir: &str,
-) -> Result<(), Error> {
+pub fn run_stwo(path: &str, input: MmrInput, output_dir: &str) -> Result<(), Error> {
     let program = load_program(path)?;
     let cairo_run_config = cairo_run::CairoRunConfig {
         allow_missing_builtins: None, // Optional
@@ -93,10 +91,7 @@ pub fn run(path: &str, input: MmrInput) -> Result<CairoPie, Error> {
     Ok(pie)
 }
 
-fn generate_stwo_files(
-    cairo_runner: &CairoRunner,
-    output_dir: &str,
-) -> Result<(), Error> {
+fn generate_stwo_files(cairo_runner: &CairoRunner, output_dir: &str) -> Result<(), Error> {
     std::fs::create_dir_all(output_dir)?;
 
     let memory_path = Path::new(output_dir).join("memory.bin");
@@ -142,16 +137,9 @@ fn main() {
     let input_str = include_str!("../input.json");
     let input: MmrInput = serde_json::from_str(input_str).unwrap();
 
-    // Assuming we are processing the first chain integration which is "beacon"
-    // let beacon_input = input.chain_integrations.into_iter().next().unwrap().data;
-
-    let output_dir = "../output";
+    let output_dir: &'static str = "../output/";
     let program_path = "../build/epoch.json";
-
     let pie = run(program_path, input.clone()).unwrap();
 
-
-    // println!("Pie: {:?}", pie);
-
-    // run_stwo(program_path, beacon_input, output_dir).unwrap();
+    pie.write_zip_file(&Path::new(output_dir).join("pie.zip"), true).unwrap();
 }

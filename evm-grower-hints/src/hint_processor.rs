@@ -1,11 +1,29 @@
-use crate::hints::{self, input::{ChainIntegration, MmrInput}, mmr::{hint_is_position_in_mmr_array, mmr_bit_length, mmr_left_child, HINT_IS_POSITION_IN_MMR_ARRAY, MMR_BIT_LENGTH, MMR_LEFT_CHILD}};
-use rust_vm_hints::{cairo_type::CairoWritable, vm::cairo_vm::{
-    hint_processor::{builtin_hint_processor::{builtin_hint_processor_definition::{BuiltinHintProcessor, HintProcessorData}, hint_utils::{get_ptr_from_var_name, get_relocatable_from_var_name}}, hint_processor_definition::{HintExtension, HintProcessorLogic}},
-    types::exec_scope::ExecutionScopes,
-    vm::{errors::hint_errors::HintError, runners::cairo_runner::ResourceTracker, vm_core::VirtualMachine},
-    Felt252,
-}};
-use rust_vm_hints::default_hints::{HintImpl, default_hint_mapping};
+use crate::hints::{
+    input::{ChainIntegration, MmrInput},
+    mmr::{
+        hint_is_position_in_mmr_array, mmr_bit_length, mmr_left_child,
+        HINT_IS_POSITION_IN_MMR_ARRAY, MMR_BIT_LENGTH, MMR_LEFT_CHILD,
+    },
+};
+use rust_vm_hints::default_hints::{default_hint_mapping, HintImpl};
+use rust_vm_hints::{
+    cairo_type::CairoWritable,
+    vm::cairo_vm::{
+        hint_processor::{
+            builtin_hint_processor::{
+                builtin_hint_processor_definition::{BuiltinHintProcessor, HintProcessorData},
+                hint_utils::{get_ptr_from_var_name, get_relocatable_from_var_name},
+            },
+            hint_processor_definition::{HintExtension, HintProcessorLogic},
+        },
+        types::exec_scope::ExecutionScopes,
+        vm::{
+            errors::hint_errors::HintError, runners::cairo_runner::ResourceTracker,
+            vm_core::VirtualMachine,
+        },
+        Felt252,
+    },
+};
 use std::any::Any;
 use std::collections::HashMap;
 
@@ -16,12 +34,17 @@ pub struct CustomHintProcessor {
 
 pub const HINT_WRITE_BEACON_INPUT: &str = "write_beacon_input()";
 
+impl Default for CustomHintProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CustomHintProcessor {
-       pub fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             hints: Self::hints(),
             builtin_hint_proc: BuiltinHintProcessor::new_empty(),
-            
         }
     }
 
@@ -29,12 +52,15 @@ impl CustomHintProcessor {
         let mut hints = default_hint_mapping();
         hints.insert(MMR_BIT_LENGTH.to_string(), mmr_bit_length);
         hints.insert(MMR_LEFT_CHILD.to_string(), mmr_left_child);
-        hints.insert(HINT_IS_POSITION_IN_MMR_ARRAY.to_string(), hint_is_position_in_mmr_array);
+        hints.insert(
+            HINT_IS_POSITION_IN_MMR_ARRAY.to_string(),
+            hint_is_position_in_mmr_array,
+        );
         hints
     }
 
     fn write_beacon_input(
-        &self, 
+        &self,
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &HintProcessorData,
@@ -49,7 +75,9 @@ impl CustomHintProcessor {
             &hint_data.ap_tracking,
         )?;
 
-        beacon_input.start_mmr.to_memory(vm, start_mmr_snapshot_ptr)?;
+        beacon_input
+            .start_mmr
+            .to_memory(vm, start_mmr_snapshot_ptr)?;
 
         let end_mmr_snapshot_ptr = get_relocatable_from_var_name(
             "end_mmr_snapshot",
@@ -65,14 +93,12 @@ impl CustomHintProcessor {
             &hint_data.ids_data,
             &hint_data.ap_tracking,
         )?;
-        beacon_input.last_leaf_proof.to_memory(vm, last_leaf_proof_ptr)?;
+        beacon_input
+            .last_leaf_proof
+            .to_memory(vm, last_leaf_proof_ptr)?;
 
-        let mut headers_ptr = get_ptr_from_var_name(
-            "headers",
-            vm,
-            &hint_data.ids_data,
-            &hint_data.ap_tracking,
-        )?;
+        let mut headers_ptr =
+            get_ptr_from_var_name("headers", vm, &hint_data.ids_data, &hint_data.ap_tracking)?;
 
         for header in beacon_input.headers.iter() {
             headers_ptr = header.header.to_memory(vm, headers_ptr)?;
@@ -88,7 +114,6 @@ impl CustomHintProcessor {
 
         Ok(())
     }
-
 }
 
 impl HintProcessorLogic for CustomHintProcessor {
@@ -114,9 +139,7 @@ impl HintProcessorLogic for CustomHintProcessor {
             let hint_code = hpd.code.as_str();
 
             let res = match hint_code {
-                HINT_WRITE_BEACON_INPUT => {
-                    self.write_beacon_input(vm, exec_scopes, hpd, constants)
-                }
+                HINT_WRITE_BEACON_INPUT => self.write_beacon_input(vm, exec_scopes, hpd, constants),
                 _ => Err(HintError::UnknownHint(
                     hint_code.to_string().into_boxed_str(),
                 )),
@@ -140,9 +163,7 @@ impl HintProcessorLogic for CustomHintProcessor {
         }
 
         Err(HintError::WrongHintData)
-
     }
 }
 
 impl ResourceTracker for CustomHintProcessor {}
-
