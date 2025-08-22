@@ -8,7 +8,14 @@ from starkware.cairo.common.default_dict import default_dict_new, default_dict_f
 from starkware.cairo.common.dict_access import DictAccess
 from starkware.cairo.common.dict import dict_write
 from starkware.cairo.common.registers import get_fp_and_pc
-from src.mmr.utils import assert_mmr_size_is_valid, compute_peaks_positions, bag_peaks, get_full_mmr_peak_values, compute_height_pre_alloc_pow2, get_roots
+from src.mmr.utils import (
+    assert_mmr_size_is_valid,
+    compute_peaks_positions,
+    bag_peaks,
+    get_full_mmr_peak_values,
+    compute_height_pre_alloc_pow2,
+    get_roots,
+)
 from src.mmr.types import MmrSnapshot
 from src.debug.lib import print_felt_hex, print_uint256, print_felt
 
@@ -207,16 +214,8 @@ func merge_subtrees_if_applicable{
 //   Parent position is pos + 1 and hash order is H(sibling, element).
 // - Else element is a left child. Parent position is pos + 2^(height+1) and hash
 //   order is H(element, sibling).
-func hash_subtree_path_poseidon{
-    range_check_ptr,
-    poseidon_ptr: PoseidonBuiltin*,
-    pow2_array: felt*,
-}(
-    element: felt,
-    height: felt,
-    position: felt,
-    inclusion_proof: felt*,
-    inclusion_proof_len: felt,
+func hash_subtree_path_poseidon{range_check_ptr, poseidon_ptr: PoseidonBuiltin*, pow2_array: felt*}(
+    element: felt, height: felt, position: felt, inclusion_proof: felt*, inclusion_proof_len: felt
 ) -> (peak: felt, peak_pos: felt, peak_height: felt) {
     alloc_locals;
     if (inclusion_proof_len == 0) {
@@ -268,10 +267,7 @@ func hash_subtree_path_poseidon{
 // - Else element is a left child. Parent position is pos + 2^(height+1) and Keccak
 //   is computed as Keccak(element, sibling).
 func hash_subtree_path_keccak{
-    range_check_ptr,
-    bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
-    pow2_array: felt*,
+    range_check_ptr, bitwise_ptr: BitwiseBuiltin*, keccak_ptr: KeccakBuiltin*, pow2_array: felt*
 }(
     element: Uint256,
     height: felt,

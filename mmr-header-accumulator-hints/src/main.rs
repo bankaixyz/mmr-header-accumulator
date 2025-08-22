@@ -13,7 +13,15 @@ use cairo_vm_base::vm::cairo_vm::{
 use mmr_header_accumulator_hints::{
     error::Error, hint_processor::CustomHintProcessor, hints::input::MmrInput,
 };
-use std::{io, path::Path};
+use std::{io, path::Path, path::PathBuf};
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(short, long)]
+    input_path: PathBuf,
+}
 
 fn load_program(path: &str) -> Result<Program, Error> {
     // Check if it's an absolute path that doesn't exist, try relative
@@ -136,11 +144,14 @@ fn generate_stwo_files(cairo_runner: &CairoRunner, output_dir: &str) -> Result<(
 }
 
 fn main() {
-    let input_str = include_str!("../input.json");
-    let input: MmrInput = serde_json::from_str(input_str).unwrap();
+    let args = Args::parse();
+    let input_str = std::fs::read_to_string(args.input_path).unwrap();
+    let input: MmrInput = serde_json::from_str(&input_str).unwrap();
+
+    println!("got input");
 
     let output_dir: &'static str = "../output/";
-    let program_path = "../build/epoch.json";
+    let program_path = "../build/main.json";
     let pie = run(program_path, input.clone()).unwrap();
 
     pie.write_zip_file(&Path::new(output_dir).join("pie.zip"), true)

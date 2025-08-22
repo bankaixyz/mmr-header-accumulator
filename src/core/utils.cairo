@@ -24,7 +24,6 @@ func felt_divmod{range_check_ptr}(value, div) -> (q: felt, r: felt) {
     return (q, r);
 }
 
-
 // Computes x//y and x%y.
 // Assumption: y must be a power of 2
 // params:

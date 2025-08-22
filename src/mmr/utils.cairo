@@ -299,9 +299,7 @@ func get_full_mmr_peak_values{
         tempvar range_check_ptr = range_check_ptr + 1;
         let (peak_poseidon: felt) = dict_read{dict_ptr=peaks_dict_poseidon}(key=position);
         // Treat the felt value from dict back to a Uint256 ptr:
-        let (peak_keccak_ptr: Uint256*) = dict_read{dict_ptr=peaks_dict_keccak}(
-            key=position
-        );
+        let (peak_keccak_ptr: Uint256*) = dict_read{dict_ptr=peaks_dict_keccak}(key=position);
         local peak_keccak: Uint256;
         assert peak_keccak.low = peak_keccak_ptr.low;
         assert peak_keccak.high = peak_keccak_ptr.high;
@@ -476,11 +474,15 @@ func bag_peaks{
 
 // Asserts that a given MMR position is the last leaf in the entire MMR of size mmr_size.
 // Ensure the mmr size is valid before using this function.
-func assert_is_last_leaf_in_mmr{range_check_ptr, pow2_array: felt*}(mmr_size: felt, position: felt) {
+func assert_is_last_leaf_in_mmr{range_check_ptr, pow2_array: felt*}(
+    mmr_size: felt, position: felt
+) {
     alloc_locals;
 
     // Get rightmost peak
-    let (peaks_positions: felt*, peaks_len: felt) = compute_peaks_positions{pow2_array=pow2_array}(mmr_size);
+    let (peaks_positions: felt*, peaks_len: felt) = compute_peaks_positions{pow2_array=pow2_array}(
+        mmr_size
+    );
     let last_peak_pos = peaks_positions[peaks_len - 1];
 
     // Derive last leaf under that peak

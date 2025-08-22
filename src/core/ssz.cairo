@@ -8,10 +8,7 @@ from starkware.cairo.common.builtin_keccak.keccak import keccak_uint256s_bigend
 from starkware.cairo.common.memcpy import memcpy
 from starkware.cairo.common.memset import memset
 from starkware.cairo.common.alloc import alloc
-from starkware.cairo.common.builtin_poseidon.poseidon import (
-    poseidon_hash,
-    poseidon_hash_many,
-)
+from starkware.cairo.common.builtin_poseidon.poseidon import poseidon_hash, poseidon_hash_many
 from src.core.sha import SHA256
 from src.debug.lib import print_string, print_felt, print_felt_hex
 from src.core.utils import pow2alloc128, felt_divmod
@@ -62,7 +59,9 @@ namespace SSZ {
 
     func hash_execution_payload_header_root{
         range_check_ptr, bitwise_ptr: BitwiseBuiltin*, pow2_array: felt*, sha256_ptr: felt*
-    }(payload_fields: Uint256*) -> (header_root: Uint256, header_hash: Uint256, header_height: felt) {
+    }(payload_fields: Uint256*) -> (
+        header_root: Uint256, header_hash: Uint256, header_height: felt
+    ) {
         let leaf_segments = cast(payload_fields, felt*);
         memset(dst=leaf_segments + 34, value=0, n=30);
 
@@ -74,8 +73,6 @@ namespace SSZ {
         return (root, leafs[12], header_height.low);
     }
 }
-
-
 
 namespace MerkleTree {
     func compute_root{

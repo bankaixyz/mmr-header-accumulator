@@ -2,6 +2,57 @@
 
 This Cairo program is a core component of Bankai. It is used to provably grow a Merkle Mountain Range (MMR) with new headers. The code in this repository is designed to be imported and used within the main Bankai Cairo project.
 
+## How to run
+
+### 1. Setup
+
+First, run the setup script. This only needs to be done once.
+
+```bash
+make setup
+```
+
+### 2. Activate Environment
+
+Before running the programs, you must activate the virtual environment.
+
+```bash
+source scripts/activate.sh
+```
+
+### 3. Compile the Cairo Program
+
+Compile the main Cairo program to produce a JSON artifact that the hint processor can execute.
+
+```bash
+make build-cairo
+```
+This will compile `src/beacon/main.cairo` and create `build/main.json`.
+
+### 4. Run the Hint Processor
+
+Finally, run the Rust hint processor to execute the compiled Cairo program with a given input file. The following command runs the processor with `input.json` from the project root. The output PIE file will be saved in the `output/` directory.
+
+```bash
+cargo run -- --input-path example_input.json
+```
+
+### 5. Format the Cairo Code
+
+Format the Cairo code to ensure consistency.
+
+```bash
+make format
+```
+
+### 6. Get the Program Hash
+
+Get the hash of the compiled program.
+
+```bash
+make get-program-hash
+```
+
 ## How it Works: Adding Headers to the MMR
 
 The core of this repository is a Cairo program that provably adds a batch of new block headers to a Merkle Mountain Range (MMR). This process ensures that the headers form a valid and continuous chain, and that they are correctly appended to the MMR without any gaps. The process can be broken down into the following steps:

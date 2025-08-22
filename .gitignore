@@ -30,3 +30,5 @@ solidity-verifier/lib/*
 
 target
 output
+
+!example_input.json

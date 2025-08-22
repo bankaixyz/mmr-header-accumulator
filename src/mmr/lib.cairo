@@ -10,9 +10,15 @@ from starkware.cairo.common.dict import dict_write
 from starkware.cairo.common.registers import get_fp_and_pc
 from src.mmr.types import MmrSnapshot
 from src.mmr.core import initialize_peaks_dicts, construct_mmr
-from src.mmr.utils import assert_mmr_size_is_valid, compute_peaks_positions, bag_peaks, get_full_mmr_peak_values, compute_height_pre_alloc_pow2 as compute_height, get_roots
+from src.mmr.utils import (
+    assert_mmr_size_is_valid,
+    compute_peaks_positions,
+    bag_peaks,
+    get_full_mmr_peak_values,
+    compute_height_pre_alloc_pow2 as compute_height,
+    get_roots,
+)
 from src.debug.lib import print_felt_hex, print_uint256, print_felt, print_string
-
 
 func initialize_peaks{
     range_check_ptr,
@@ -30,16 +36,18 @@ func initialize_peaks{
 
     // Ensure the MMR size is valid
     assert_mmr_size_is_valid{pow2_array=pow2_array}(start_mmr_snapshot.size);
-    assert_mmr_size_is_valid{pow2_array=pow2_array}(end_mmr_snapshot.size); // Sanity check
+    assert_mmr_size_is_valid{pow2_array=pow2_array}(end_mmr_snapshot.size);  // Sanity check
 
     // Compute previous_peaks_positions given the previous MMR size (from left to right), as well:
-    let (
-        start_peaks_positions: felt*, start_peaks_positions_len: felt
-    ) = compute_peaks_positions{pow2_array=pow2_array}(start_mmr_snapshot.size);
+    let (start_peaks_positions: felt*, start_peaks_positions_len: felt) = compute_peaks_positions{
+        pow2_array=pow2_array
+    }(start_mmr_snapshot.size);
 
     // Compute bagged peaks
     let (bagged_peaks_poseidon, bagged_peaks_keccak) = bag_peaks(
-        start_mmr_snapshot.poseidon_peaks, start_mmr_snapshot.keccak_peaks, start_peaks_positions_len
+        start_mmr_snapshot.poseidon_peaks,
+        start_mmr_snapshot.keccak_peaks,
+        start_peaks_positions_len,
     );
 
     // Compute roots
@@ -62,7 +70,7 @@ func initialize_peaks{
     let (local peaks_dict_keccak) = default_dict_new(default_value=0);
     tempvar start_peaks_dict_poseidon = peaks_dict_poseidon;
     tempvar start_peaks_dict_keccak = peaks_dict_keccak;
-    
+
     initialize_peaks_dicts{
         dict_end_poseidon=peaks_dict_poseidon, dict_end_keccak=peaks_dict_keccak
     }(
@@ -73,10 +81,7 @@ func initialize_peaks{
     );
 
     return (
-        start_peaks_dict_poseidon,
-        start_peaks_dict_keccak,
-        peaks_dict_poseidon,
-        peaks_dict_keccak,
+        start_peaks_dict_poseidon, start_peaks_dict_keccak, peaks_dict_poseidon, peaks_dict_keccak
     );
 }
 
@@ -88,13 +93,9 @@ func grow_mmr{
     peaks_dict_poseidon: DictAccess*,
     peaks_dict_keccak: DictAccess*,
     pow2_array: felt*,
-}(
-    mmr_size: felt,
-    keccak_leafs: Uint256*,
-    poseidon_leafs: felt*,
-    n_headers: felt,
-) -> (new_mmr_root_poseidon: felt, new_mmr_root_keccak: Uint256, new_mmr_size: felt) {
-
+}(mmr_size: felt, keccak_leafs: Uint256*, poseidon_leafs: felt*, n_headers: felt) -> (
+    new_mmr_root_poseidon: felt, new_mmr_root_keccak: Uint256, new_mmr_size: felt
+) {
     let (mmr_array_keccak: Uint256*) = alloc();
     let (mmr_array_poseidon: felt*) = alloc();
     let mmr_array_len = 0;
@@ -115,11 +116,8 @@ func grow_mmr{
     );
 }
 
-
 // Ensure the DictAccess is valid and the new roots match the expected values
-func finalize_mmr{
-    range_check_ptr
-}(
+func finalize_mmr{range_check_ptr}(
     end_mmr_snapshot: MmrSnapshot,
     new_mmr_root_poseidon: felt,
     new_mmr_root_keccak: Uint256,
@@ -128,7 +126,7 @@ func finalize_mmr{
     peaks_dict_poseidon: DictAccess*,
     start_peaks_dict_keccak: DictAccess*,
     peaks_dict_keccak: DictAccess*,
-) { 
+) {
     // Ensure the dict accesses are valid
     default_dict_finalize(start_peaks_dict_poseidon, peaks_dict_poseidon, 0);
     default_dict_finalize(start_peaks_dict_keccak, peaks_dict_keccak, 0);
@@ -143,7 +141,7 @@ func finalize_mmr{
     print_felt_hex(new_mmr_root_poseidon);
     print_string('New Keccak root: ');
     print_uint256(new_mmr_root_keccak);
-    print_string('New MMR size: '); 
+    print_string('New MMR size: ');
     print_felt(new_mmr_size);
 
     return ();
