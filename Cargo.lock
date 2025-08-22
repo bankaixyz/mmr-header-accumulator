@@ -912,6 +912,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-vm-base"
+version = "0.1.0"
+source = "git+https://github.com/bankaixyz/cairo-vm-base?rev=1c9ec5bfb64b9e06b92783c908c69404599b1107#1c9ec5bfb64b9e06b92783c908c69404599b1107"
+dependencies = [
+ "alloy-primitives",
+ "bincode",
+ "cairo-vm",
+ "hex",
+ "num-bigint",
+ "num-traits",
+ "serde",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1274,27 +1288,6 @@ checksum = "778e2ac28f6c47af28e4907f13ffd1e1ddbd400980a9abd7c8df189bf578a5ad"
 dependencies = [
  "libc",
  "windows-sys",
-]
-
-[[package]]
-name = "evm-grower-hints"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "bincode",
- "clap",
- "hex",
- "num-bigint",
- "num-traits",
- "rand 0.8.5",
- "rust-vm-hints",
- "serde",
- "serde_json",
- "sha3",
- "starknet-crypto",
- "starknet-types-core",
- "thiserror 1.0.65",
- "tiny-keccak",
 ]
 
 [[package]]
@@ -1834,6 +1827,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2d80299ef12ff69b16a84bb182e3b9df68b5a91574d3d4fa6e41b65deec4df1"
 dependencies = [
  "adler2",
+]
+
+[[package]]
+name = "mmr-header-accumulator-hints"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "bincode",
+ "cairo-vm-base",
+ "clap",
+ "hex",
+ "num-bigint",
+ "num-traits",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "sha3",
+ "starknet-crypto",
+ "starknet-types-core",
+ "thiserror 1.0.65",
+ "tiny-keccak",
 ]
 
 [[package]]
@@ -2420,19 +2434,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.100",
-]
-
-[[package]]
-name = "rust-vm-hints"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "bincode",
- "cairo-vm",
- "hex",
- "num-bigint",
- "num-traits",
- "serde",
 ]
 
 [[package]]

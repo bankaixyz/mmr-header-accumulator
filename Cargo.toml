@@ -2,16 +2,11 @@
 resolver = "2"
 
 
-members = ["evm-grower-hints"]
+members = ["mmr-header-accumulator-hints"]
 
 [workspace.dependencies]
 bincode = { version = "2.0.1", default-features = false, features = ["serde"] }
-cairo-vm = { git = "https://github.com/lambdaclass/cairo-vm", tag = "v2.0.1", features = [
-    "extensive_hints",
-    "clap",
-    "cairo-1-hints",
-    "mod_builtin",
-] }
+
 clap = { version = "4.3.10", features = ["derive"] }
 hex = "0.4.3"
 num-bigint = "0.4.6"
@@ -24,4 +19,5 @@ thiserror = "1.0.64"
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 serde_json = "1.0.132"
 alloy-primitives = "0.8.13"
-evm-grower-hints = { path = "evm-grower-hints" }
+mmr-header-accumulator-hints = { path = "mmr-header-accumulator-hints" }
+cairo-vm-base = { git = "https://github.com/bankaixyz/cairo-vm-base", features = ["serde"], rev = "1c9ec5bfb64b9e06b92783c908c69404599b1107" }
