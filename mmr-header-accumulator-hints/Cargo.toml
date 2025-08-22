@@ -1,0 +1,25 @@
+[package]
+name = "mmr-header-accumulator-hints"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "mmr_header_accumulator_hints"
+path = "src/lib.rs"
+
+[dependencies]
+bincode.workspace = true
+alloy-primitives.workspace = true
+clap.workspace = true
+hex.workspace = true
+num-bigint.workspace = true
+num-traits.workspace = true
+rand.workspace = true
+serde_json.workspace = true
+sha3.workspace = true
+starknet-crypto.workspace = true
+starknet-types-core.workspace = true
+thiserror.workspace = true
+tiny-keccak.workspace = true
+cairo-vm-base.workspace = true
+serde = { version = "1.0.219", features = ["derive"] }
