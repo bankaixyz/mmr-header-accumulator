@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use cairo_vm_base::cairo_type::{CairoType, CairoWritable};
-use cairo_vm_base::types::serde_utils::{deserialize_from_any, deserialize_vec_from_string};
 use cairo_vm_base::types::{felt::Felt, uint256::Uint256};
 use cairo_vm_base::vm::cairo_vm::hint_processor::builtin_hint_processor::builtin_hint_processor_definition::HintProcessorData;
 use cairo_vm_base::vm::cairo_vm::hint_processor::builtin_hint_processor::hint_utils::{get_ptr_from_var_name, get_relocatable_from_var_name};
@@ -13,21 +12,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BeaconHeader {
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub slot: Felt,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub proposer_index: Felt,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub parent_root: Uint256,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub state_root: Uint256,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub body_root: Uint256,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BeaconHeaderWithRoot {
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub root: Uint256,
     pub header: BeaconHeader,
 }
@@ -35,44 +28,30 @@ pub struct BeaconHeaderWithRoot {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MmrSnapshot {
     #[serde(alias = "elements_count")]
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub size: Felt,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub poseidon_root: Felt,
     #[serde(alias = "poseidon_peaks")]
-    #[serde(deserialize_with = "deserialize_vec_from_string")]
     pub poseidon_peaks: Vec<Felt>,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub keccak_root: Uint256,
     #[serde(alias = "keccak_peaks")]
-    #[serde(deserialize_with = "deserialize_vec_from_string")]
     pub keccak_peaks: Vec<Uint256>,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub peaks_len: Felt,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LastLeafProof {
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub header_root: Uint256,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub header_position: Felt,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub path_len: Felt,
-    #[serde(deserialize_with = "deserialize_vec_from_string")]
     pub poseidon_path: Vec<Felt>,
-    #[serde(deserialize_with = "deserialize_vec_from_string")]
     pub keccak_path: Vec<Uint256>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ChainIntegration {
     pub name: String,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub network_id: Felt,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub start_height: Felt,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub end_height: Felt,
     pub headers: Vec<BeaconHeaderWithRoot>,
     pub last_leaf_proof: LastLeafProof,
@@ -82,9 +61,7 @@ pub struct ChainIntegration {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MmrInput {
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub epoch_number: Felt,
-    #[serde(deserialize_with = "deserialize_from_any")]
     pub block_number: Felt,
     pub chain_integrations: Vec<ChainIntegration>,
 }
