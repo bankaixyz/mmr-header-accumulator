@@ -86,4 +86,4 @@ This repository is a fork of the original work by the team at Herodotus. We want
 
 The original repository can be found here: [https://github.com/herodotusdev/mmr-header-accumulator](https://github.com/herodotusdev/mmr-header-accumulator).
 
-The original project is licensed under the Apache 2.0 License. We have made modifications to the original software in this fork.
+The original project is licensed under the GPL 2 License. We have made modifications to the original software in this fork.
