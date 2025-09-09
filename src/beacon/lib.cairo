@@ -14,7 +14,6 @@ from src.mmr.utils import assert_is_last_leaf_in_mmr
 from src.mmr.core import hash_subtree_path_poseidon, hash_subtree_path_keccak
 
 func run_beacon_mmr_update{
-    output_ptr: felt*,
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
     keccak_ptr: KeccakBuiltin*,
