@@ -35,13 +35,13 @@ func initialize_peaks{
     alloc_locals;
 
     // Ensure the MMR size is valid
-    assert_mmr_size_is_valid{pow2_array=pow2_array}(start_mmr_snapshot.size);
-    assert_mmr_size_is_valid{pow2_array=pow2_array}(end_mmr_snapshot.size);  // Sanity check
+    assert_mmr_size_is_valid{pow2_array=pow2_array}(start_mmr_snapshot.elements_count);
+    assert_mmr_size_is_valid{pow2_array=pow2_array}(end_mmr_snapshot.elements_count);  // Sanity check
 
     // Compute previous_peaks_positions given the previous MMR size (from left to right), as well:
     let (start_peaks_positions: felt*, start_peaks_positions_len: felt) = compute_peaks_positions{
         pow2_array=pow2_array
-    }(start_mmr_snapshot.size);
+    }(start_mmr_snapshot.elements_count);
 
     // Compute bagged peaks
     let (bagged_peaks_poseidon, bagged_peaks_keccak) = bag_peaks(
@@ -51,11 +51,11 @@ func initialize_peaks{
     );
 
     // Compute roots
-    let (root_poseidon) = poseidon_hash(start_mmr_snapshot.size, bagged_peaks_poseidon);
+    let (root_poseidon) = poseidon_hash(start_mmr_snapshot.elements_count, bagged_peaks_poseidon);
 
     let (keccak_input: felt*) = alloc();
     let inputs_start = keccak_input;
-    keccak_add_uint256{inputs=keccak_input}(num=Uint256(start_mmr_snapshot.size, 0), bigend=1);
+    keccak_add_uint256{inputs=keccak_input}(num=Uint256(start_mmr_snapshot.elements_count, 0), bigend=1);
     keccak_add_uint256{inputs=keccak_input}(num=bagged_peaks_keccak, bigend=1);
     let (root_keccak: Uint256) = keccak(inputs=inputs_start, n_bytes=2 * 32);
     let (root_keccak) = uint256_reverse_endian(root_keccak);
@@ -135,7 +135,7 @@ func finalize_mmr{range_check_ptr}(
     assert end_mmr_snapshot.poseidon_root = new_mmr_root_poseidon;
     assert end_mmr_snapshot.keccak_root.low = new_mmr_root_keccak.low;
     assert end_mmr_snapshot.keccak_root.high = new_mmr_root_keccak.high;
-    assert end_mmr_snapshot.size = new_mmr_size;
+    assert end_mmr_snapshot.elements_count = new_mmr_size;
 
     print_string('New Poseidon root: ');
     print_felt_hex(new_mmr_root_poseidon);
