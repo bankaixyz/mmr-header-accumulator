@@ -15,7 +15,6 @@ pub struct MmrSnapshotCairo {
     pub keccak_root: Uint256,
     pub poseidon_root: Felt,
     pub elements_count: Felt,
-    pub leafs_count: Felt,
     pub keccak_peaks: Vec<Uint256>,
     pub poseidon_peaks: Vec<Felt>,
 }

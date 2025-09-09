@@ -84,8 +84,18 @@ impl CairoWritable for MmrSnapshotCairo {
         cairo_vm_base::vm::cairo_vm::vm::errors::hint_errors::HintError,
     > {
         let address_start = address;
-        let address = self.elements_count.to_memory(vm, address)?;
+        let address = self.keccak_root.to_memory(vm, address)?;
         let address = self.poseidon_root.to_memory(vm, address)?;
+        let address = self.elements_count.to_memory(vm, address)?;
+
+        // Create segment for keccak peaks and store its pointer
+        let keccak_peaks_segment = vm.add_memory_segment();
+        vm.insert_value(address, keccak_peaks_segment)?;
+        let mut segment_ptr = keccak_peaks_segment;
+        for peak in &self.keccak_peaks {
+            segment_ptr = peak.to_memory(vm, segment_ptr)?;
+        }
+        let address = (address + 1)?;
 
         // Create segment for poseidon peaks and store its pointer
         let poseidon_peaks_segment = vm.add_memory_segment();
@@ -96,17 +106,8 @@ impl CairoWritable for MmrSnapshotCairo {
         }
         let address = (address + 1)?;
 
-        let address = self.keccak_root.to_memory(vm, address)?;
-
-        // Create segment for keccak peaks and store its pointer
-        let keccak_peaks_segment = vm.add_memory_segment();
-        vm.insert_value(address, keccak_peaks_segment)?;
-        let mut segment_ptr = keccak_peaks_segment;
-        for peak in &self.keccak_peaks {
-            segment_ptr = peak.to_memory(vm, segment_ptr)?;
-        }
-        let address = (address + 1)?;
         vm.insert_value(address, Felt252::from(self.poseidon_peaks.len()))?;
+        let address = (address + 1)?;
 
         assert!(address == (address_start + Self::n_fields())?);
 
