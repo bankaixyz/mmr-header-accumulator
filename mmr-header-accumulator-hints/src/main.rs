@@ -10,11 +10,11 @@ use cairo_vm_base::vm::cairo_vm::{
         runners::cairo_runner::CairoRunner,
     },
 };
+use clap::Parser;
 use mmr_header_accumulator_hints::{
     error::Error, hint_processor::CustomHintProcessor, types::BeaconMmrUpdateCairo,
 };
 use std::{io, path::Path, path::PathBuf};
-use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

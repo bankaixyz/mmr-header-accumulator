@@ -7,17 +7,19 @@ use crate::hints::{
 };
 use cairo_vm_base::default_hints::{default_hint_mapping, HintImpl};
 use cairo_vm_base::vm::cairo_vm::{
-        hint_processor::{
-            builtin_hint_processor::builtin_hint_processor_definition::{BuiltinHintProcessor, HintProcessorData},
-            hint_processor_definition::{HintExtension, HintProcessorLogic},
+    hint_processor::{
+        builtin_hint_processor::builtin_hint_processor_definition::{
+            BuiltinHintProcessor, HintProcessorData,
         },
-        types::exec_scope::ExecutionScopes,
-        vm::{
-            errors::hint_errors::HintError, runners::cairo_runner::ResourceTracker,
-            vm_core::VirtualMachine,
-        },
-        Felt252,
-    };
+        hint_processor_definition::{HintExtension, HintProcessorLogic},
+    },
+    types::exec_scope::ExecutionScopes,
+    vm::{
+        errors::hint_errors::HintError, runners::cairo_runner::ResourceTracker,
+        vm_core::VirtualMachine,
+    },
+    Felt252,
+};
 use std::any::Any;
 use std::collections::HashMap;
 

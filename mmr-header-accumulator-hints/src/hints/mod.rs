@@ -2,10 +2,9 @@ use std::collections::HashMap;
 
 use cairo_vm_base::default_hints::HintImpl;
 
-
 use crate::hints::mmr::{
-    hint_is_position_in_mmr_array, mmr_bit_length, mmr_left_child,
-    HINT_IS_POSITION_IN_MMR_ARRAY, MMR_BIT_LENGTH, MMR_LEFT_CHILD,
+    hint_is_position_in_mmr_array, mmr_bit_length, mmr_left_child, HINT_IS_POSITION_IN_MMR_ARRAY,
+    MMR_BIT_LENGTH, MMR_LEFT_CHILD,
 };
 
 pub mod input;

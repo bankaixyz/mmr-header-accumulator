@@ -1,14 +1,12 @@
 use std::collections::HashMap;
 
 use cairo_vm_base::cairo_type::{CairoType, CairoWritable};
-use cairo_vm_base::types::{felt::Felt, uint256::Uint256};
 use cairo_vm_base::vm::cairo_vm::hint_processor::builtin_hint_processor::builtin_hint_processor_definition::HintProcessorData;
 use cairo_vm_base::vm::cairo_vm::hint_processor::builtin_hint_processor::hint_utils::{get_ptr_from_var_name, get_relocatable_from_var_name};
 use cairo_vm_base::vm::cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm_base::vm::cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine;
 use cairo_vm_base::vm::cairo_vm::Felt252;
-use serde::{Deserialize, Serialize};
 
 use crate::types::{BeaconHeaderCairo, BeaconMmrUpdateCairo, LastLeafProofCairo, MmrSnapshotCairo};
 
@@ -20,7 +18,9 @@ pub fn write_beacon_input(
     hint_data: &HintProcessorData,
     _constants: &HashMap<String, Felt252>,
 ) -> Result<(), HintError> {
-    let beacon_mmr_update: BeaconMmrUpdateCairo = exec_scopes.get::<BeaconMmrUpdateCairo>("beacon_mmr_update").unwrap();
+    let beacon_mmr_update: BeaconMmrUpdateCairo = exec_scopes
+        .get::<BeaconMmrUpdateCairo>("beacon_mmr_update")
+        .unwrap();
     let start_mmr_snapshot_ptr = get_relocatable_from_var_name(
         "start_mmr_snapshot",
         vm,
@@ -38,7 +38,9 @@ pub fn write_beacon_input(
         &hint_data.ids_data,
         &hint_data.ap_tracking,
     )?;
-    beacon_mmr_update.end_snapshot.to_memory(vm, end_mmr_snapshot_ptr)?;
+    beacon_mmr_update
+        .end_snapshot
+        .to_memory(vm, end_mmr_snapshot_ptr)?;
 
     // let last_leaf_proof_ptr = get_relocatable_from_var_name(
     //     "last_leaf_proof",
@@ -64,7 +66,10 @@ pub fn write_beacon_input(
         &hint_data.ids_data,
         &hint_data.ap_tracking,
     )?;
-    vm.insert_value(n_headers, Felt252::from(beacon_mmr_update.added_headers.len()))?;
+    vm.insert_value(
+        n_headers,
+        Felt252::from(beacon_mmr_update.added_headers.len()),
+    )?;
 
     Ok(())
 }
