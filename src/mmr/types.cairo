@@ -1,11 +1,11 @@
 from starkware.cairo.common.uint256 import Uint256
 
 struct MmrSnapshot {
-    elements_count: felt,
-    poseidon_root: felt,
-    poseidon_peaks: felt*,
     keccak_root: Uint256,
+    poseidon_root: felt,
+    elements_count: felt,
     keccak_peaks: Uint256*,
+    poseidon_peaks: felt*,
     peaks_len: felt,
 }
 

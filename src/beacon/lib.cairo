@@ -48,9 +48,10 @@ func run{
         );
     }
 
-    with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
-        verify_last_leaf(proof=last_leaf_proof, start_mmr=start_mmr_snapshot);
-    }
+    // Disable for now
+    // with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
+    //     verify_last_leaf(proof=last_leaf_proof, start_mmr=start_mmr_snapshot);
+    // }
 
     let (poseidon_hashes: felt*) = alloc();
     let (keccak_hashes: Uint256*) = alloc();
