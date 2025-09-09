@@ -1,5 +1,5 @@
 use crate::hints::{
-    input::write_beacon_input,
+    input::{write_beacon_input, HINT_WRITE_BEACON_INPUT},
     mmr::{
         hint_is_position_in_mmr_array, mmr_bit_length, mmr_left_child,
         HINT_IS_POSITION_IN_MMR_ARRAY, MMR_BIT_LENGTH, MMR_LEFT_CHILD,
@@ -25,8 +25,6 @@ pub struct CustomHintProcessor {
     hints: HashMap<String, HintImpl>,
     builtin_hint_proc: BuiltinHintProcessor,
 }
-
-pub const HINT_WRITE_BEACON_INPUT: &str = "write_beacon_input()";
 
 impl Default for CustomHintProcessor {
     fn default() -> Self {

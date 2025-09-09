@@ -3,10 +3,6 @@ name = "mmr-header-accumulator-hints"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-name = "mmr_header_accumulator_hints"
-path = "src/lib.rs"
-
 [dependencies]
 bincode.workspace = true
 alloy-primitives.workspace = true

@@ -11,7 +11,7 @@ use cairo_vm_base::vm::cairo_vm::{
     },
 };
 use mmr_header_accumulator_hints::{
-    error::Error, hint_processor::CustomHintProcessor, hints::input::MmrInput,
+    error::Error, hint_processor::CustomHintProcessor, types::BeaconMmrUpdateCairo,
 };
 use std::{io, path::Path, path::PathBuf};
 use clap::Parser;
@@ -49,7 +49,7 @@ fn load_program(path: &str) -> Result<Program, Error> {
     Ok(program)
 }
 
-pub fn run_stwo(path: &str, input: MmrInput, output_dir: &str) -> Result<(), Error> {
+pub fn run_stwo(path: &str, input: BeaconMmrUpdateCairo, output_dir: &str) -> Result<(), Error> {
     let program = load_program(path)?;
     let cairo_run_config = cairo_run::CairoRunConfig {
         allow_missing_builtins: None, // Optional
@@ -77,7 +77,7 @@ pub fn run_stwo(path: &str, input: MmrInput, output_dir: &str) -> Result<(), Err
     Ok(())
 }
 
-pub fn run(path: &str, input: MmrInput) -> Result<CairoPie, Error> {
+pub fn run(path: &str, input: BeaconMmrUpdateCairo) -> Result<CairoPie, Error> {
     let program = load_program(path)?;
     let cairo_run_config = cairo_run::CairoRunConfig {
         allow_missing_builtins: Some(true),
@@ -86,7 +86,7 @@ pub fn run(path: &str, input: MmrInput) -> Result<CairoPie, Error> {
     };
     let mut hint_processor = CustomHintProcessor::new();
     let mut exec_scopes = ExecutionScopes::new();
-    exec_scopes.insert_value("mmr_input", input);
+    exec_scopes.insert_value("beacon_mmr_update", input);
 
     let cairo_runner = cairo_run_program_with_initial_scope(
         &program,
@@ -146,7 +146,7 @@ fn generate_stwo_files(cairo_runner: &CairoRunner, output_dir: &str) -> Result<(
 fn main() {
     let args = Args::parse();
     let input_str = std::fs::read_to_string(args.input_path).unwrap();
-    let input: MmrInput = serde_json::from_str(&input_str).unwrap();
+    let input: BeaconMmrUpdateCairo = serde_json::from_str(&input_str).unwrap();
 
     println!("got input");
 

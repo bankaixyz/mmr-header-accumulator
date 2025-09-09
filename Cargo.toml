@@ -1,22 +1,22 @@
 [workspace]
+members = ["mmr-header-accumulator-hints"]
 resolver = "2"
 
 
-members = ["mmr-header-accumulator-hints"]
 
 [workspace.dependencies]
 bincode = { version = "2.0.1", default-features = false, features = ["serde"] }
 clap = { version = "4.3.10", features = ["derive"] }
-hex = "0.4.3"
-num-bigint = "0.4.6"
-num-traits = "0.2.19"
-rand = "0.8"
-sha3 = "0.10.8"
-starknet-crypto = "0.7.2"
-starknet-types-core = "0.1.7"
-thiserror = "1.0.64"
+hex = { version = "0.4.3" }
+num-bigint = { version = "0.4.6" }
+num-traits = { version = "0.2.19" }
+rand = { version = "0.8" }
+sha3 = { version = "0.10.8" }
+starknet-crypto = { version = "0.7.2" }
+starknet-types-core = { version = "0.1.7" }
+thiserror = { version = "1.0.64" }
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
-serde_json = "1.0.132"
-alloy-primitives = "0.8.13"
+serde_json = { version = "1.0.132" }
+alloy-primitives = { version = "0.8.13" }
 mmr-header-accumulator-hints = { path = "mmr-header-accumulator-hints" }
 cairo-vm-base = { git = "https://github.com/bankaixyz/cairo-vm-base" }

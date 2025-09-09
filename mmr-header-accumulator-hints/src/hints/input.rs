@@ -10,68 +10,9 @@ use cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine;
 use cairo_vm_base::vm::cairo_vm::Felt252;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct BeaconHeader {
-    pub slot: Felt,
-    pub proposer_index: Felt,
-    pub parent_root: Uint256,
-    pub state_root: Uint256,
-    pub body_root: Uint256,
-}
+use crate::types::{BeaconHeaderCairo, BeaconMmrUpdateCairo, LastLeafProofCairo, MmrSnapshotCairo};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct BeaconHeaderWithRoot {
-    pub root: Uint256,
-    pub header: BeaconHeader,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct MmrSnapshot {
-    #[serde(alias = "elements_count")]
-    pub size: Felt,
-    pub poseidon_root: Felt,
-    #[serde(alias = "poseidon_peaks")]
-    pub poseidon_peaks: Vec<Felt>,
-    pub keccak_root: Uint256,
-    #[serde(alias = "keccak_peaks")]
-    pub keccak_peaks: Vec<Uint256>,
-    pub peaks_len: Felt,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct LastLeafProof {
-    pub header_root: Uint256,
-    pub header_position: Felt,
-    pub path_len: Felt,
-    pub poseidon_path: Vec<Felt>,
-    pub keccak_path: Vec<Uint256>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ChainIntegration {
-    pub name: String,
-    pub network_id: Felt,
-    pub start_height: Felt,
-    pub end_height: Felt,
-    pub headers: Vec<BeaconHeaderWithRoot>,
-    pub last_leaf_proof: LastLeafProof,
-    pub start_mmr: MmrSnapshot,
-    pub end_mmr: MmrSnapshot,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct MmrInput {
-    pub epoch_number: Felt,
-    pub block_number: Felt,
-    pub chain_integrations: Vec<ChainIntegration>,
-}
-
-impl MmrInput {
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        let input: MmrInput = serde_json::from_str(json)?;
-        Ok(input)
-    }
-}
+pub const HINT_WRITE_BEACON_INPUT: &str = "write_beacon_input()";
 
 pub fn write_beacon_input(
     vm: &mut VirtualMachine,
@@ -79,8 +20,7 @@ pub fn write_beacon_input(
     hint_data: &HintProcessorData,
     _constants: &HashMap<String, Felt252>,
 ) -> Result<(), HintError> {
-    let mmr_input: MmrInput = exec_scopes.get::<MmrInput>("mmr_input").unwrap();
-    let beacon_input: ChainIntegration = mmr_input.chain_integrations[0].clone();
+    let beacon_mmr_update: BeaconMmrUpdateCairo = exec_scopes.get::<BeaconMmrUpdateCairo>("beacon_mmr_update").unwrap();
     let start_mmr_snapshot_ptr = get_relocatable_from_var_name(
         "start_mmr_snapshot",
         vm,
@@ -88,8 +28,8 @@ pub fn write_beacon_input(
         &hint_data.ap_tracking,
     )?;
 
-    beacon_input
-        .start_mmr
+    beacon_mmr_update
+        .start_snapshot
         .to_memory(vm, start_mmr_snapshot_ptr)?;
 
     let end_mmr_snapshot_ptr = get_relocatable_from_var_name(
@@ -98,23 +38,24 @@ pub fn write_beacon_input(
         &hint_data.ids_data,
         &hint_data.ap_tracking,
     )?;
-    beacon_input.end_mmr.to_memory(vm, end_mmr_snapshot_ptr)?;
+    beacon_mmr_update.end_snapshot.to_memory(vm, end_mmr_snapshot_ptr)?;
 
-    let last_leaf_proof_ptr = get_relocatable_from_var_name(
-        "last_leaf_proof",
-        vm,
-        &hint_data.ids_data,
-        &hint_data.ap_tracking,
-    )?;
-    beacon_input
-        .last_leaf_proof
-        .to_memory(vm, last_leaf_proof_ptr)?;
+    // let last_leaf_proof_ptr = get_relocatable_from_var_name(
+    //     "last_leaf_proof",
+    //     vm,
+    //     &hint_data.ids_data,
+    //     &hint_data.ap_tracking,
+    // )?;
+
+    // beacon_input
+    //     .last_leaf_proof
+    //     .to_memory(vm, last_leaf_proof_ptr)?;
 
     let mut headers_ptr =
         get_ptr_from_var_name("headers", vm, &hint_data.ids_data, &hint_data.ap_tracking)?;
 
-    for header in beacon_input.headers.iter() {
-        headers_ptr = header.header.to_memory(vm, headers_ptr)?;
+    for header in beacon_mmr_update.added_headers.iter() {
+        headers_ptr = header.to_memory(vm, headers_ptr)?;
     }
 
     let n_headers = get_relocatable_from_var_name(
@@ -123,12 +64,12 @@ pub fn write_beacon_input(
         &hint_data.ids_data,
         &hint_data.ap_tracking,
     )?;
-    vm.insert_value(n_headers, Felt252::from(beacon_input.headers.len()))?;
+    vm.insert_value(n_headers, Felt252::from(beacon_mmr_update.added_headers.len()))?;
 
     Ok(())
 }
 
-impl CairoWritable for MmrSnapshot {
+impl CairoWritable for MmrSnapshotCairo {
     fn to_memory(
         &self,
         vm: &mut cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine,
@@ -138,7 +79,7 @@ impl CairoWritable for MmrSnapshot {
         cairo_vm_base::vm::cairo_vm::vm::errors::hint_errors::HintError,
     > {
         let address_start = address;
-        let address = self.size.to_memory(vm, address)?;
+        let address = self.elements_count.to_memory(vm, address)?;
         let address = self.poseidon_root.to_memory(vm, address)?;
 
         // Create segment for poseidon peaks and store its pointer
@@ -160,7 +101,7 @@ impl CairoWritable for MmrSnapshot {
             segment_ptr = peak.to_memory(vm, segment_ptr)?;
         }
         let address = (address + 1)?;
-        let address = self.peaks_len.to_memory(vm, address)?;
+        vm.insert_value(address, Felt252::from(self.poseidon_peaks.len()))?;
 
         assert!(address == (address_start + Self::n_fields())?);
 
@@ -172,7 +113,7 @@ impl CairoWritable for MmrSnapshot {
     }
 }
 
-impl CairoWritable for LastLeafProof {
+impl CairoWritable for LastLeafProofCairo {
     fn to_memory(
         &self,
         vm: &mut cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine,
@@ -214,7 +155,7 @@ impl CairoWritable for LastLeafProof {
     }
 }
 
-impl CairoWritable for BeaconHeader {
+impl CairoWritable for BeaconHeaderCairo {
     fn to_memory(
         &self,
         vm: &mut cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine,
