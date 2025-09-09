@@ -6,7 +6,6 @@ from starkware.cairo.common.dict import dict_read
 from src.beacon.types import BeaconHeader
 from src.core.ssz import SSZ
 from src.core.sha import SHA256
-from src.core.utils import pow2alloc128
 from src.debug.lib import print_uint256, print_string
 from src.mmr.leaf_hash import poseidon_uint256, keccak_uint256
 from src.mmr.types import MmrSnapshot, LastLeafProof
@@ -14,17 +13,16 @@ from src.mmr.lib import initialize_peaks, finalize_mmr, grow_mmr
 from src.mmr.utils import assert_is_last_leaf_in_mmr
 from src.mmr.core import hash_subtree_path_poseidon, hash_subtree_path_keccak
 
-func run{
+func run_beacon_mmr_update{
     output_ptr: felt*,
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
     keccak_ptr: KeccakBuiltin*,
     poseidon_ptr: PoseidonBuiltin*,
+    pow2_array: felt*,
+    sha256_ptr: felt*,
 }() {
     alloc_locals;
-
-    let pow2_array: felt* = pow2alloc128();
-    let (sha256_ptr, sha256_ptr_start) = SHA256.init();
 
     let (headers: BeaconHeader*) = alloc();
     local n_headers: felt;
@@ -36,17 +34,14 @@ func run{
     %{ write_beacon_input() %}
 
     print_string('done');
-
-    with pow2_array {
-        let (
-            start_peaks_dict_poseidon,
-            start_peaks_dict_keccak,
-            peaks_dict_poseidon,
-            peaks_dict_keccak,
-        ) = initialize_peaks(
-            start_mmr_snapshot=start_mmr_snapshot, end_mmr_snapshot=end_mmr_snapshot
-        );
-    }
+    let (
+        start_peaks_dict_poseidon,
+        start_peaks_dict_keccak,
+        peaks_dict_poseidon,
+        peaks_dict_keccak,
+    ) = initialize_peaks(
+        start_mmr_snapshot=start_mmr_snapshot, end_mmr_snapshot=end_mmr_snapshot
+    );
 
     // Disable for now
     // with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
@@ -56,16 +51,14 @@ func run{
     let (poseidon_hashes: felt*) = alloc();
     let (keccak_hashes: Uint256*) = alloc();
 
-    with pow2_array, sha256_ptr {
-        assert_header_linkage(
-            previous_root=last_leaf_proof.header_root,
-            headers=headers,
-            count=n_headers,
-            poseidon_hashes=poseidon_hashes,
-            keccak_hashes=keccak_hashes,
-        );
-    }
-    with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
+    assert_header_linkage(
+        previous_root=last_leaf_proof.header_root,
+        headers=headers,
+        count=n_headers,
+        poseidon_hashes=poseidon_hashes,
+        keccak_hashes=keccak_hashes,
+    );
+    with peaks_dict_poseidon, peaks_dict_keccak {
         let (new_mmr_root_poseidon, new_mmr_root_keccak, new_mmr_size) = grow_mmr(
             mmr_size=start_mmr_snapshot.elements_count,
             keccak_leafs=keccak_hashes,
@@ -74,7 +67,7 @@ func run{
         );
     }
 
-    with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
+    with peaks_dict_poseidon, peaks_dict_keccak {
         finalize_mmr(
             end_mmr_snapshot=end_mmr_snapshot,
             new_mmr_root_poseidon=new_mmr_root_poseidon,
@@ -87,7 +80,6 @@ func run{
         );
     }
 
-    SHA256.finalize(sha256_start_ptr=sha256_ptr_start, sha256_end_ptr=sha256_ptr);
     return ();
 }
 
