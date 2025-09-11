@@ -33,5 +33,5 @@ pub struct BeaconMmrUpdateCairo {
     pub start_snapshot: MmrSnapshotCairo,
     pub end_snapshot: MmrSnapshotCairo,
     pub added_headers: Vec<BeaconHeaderCairo>,
-    pub last_leaf_proof: Option<LastLeafProofCairo>,
+    pub last_leaf_proof: LastLeafProofCairo,
 }
