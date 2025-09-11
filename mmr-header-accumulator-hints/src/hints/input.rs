@@ -51,7 +51,6 @@ pub fn write_beacon_input(
 
     beacon_mmr_update
         .last_leaf_proof
-        .unwrap()
         .to_memory(vm, last_leaf_proof_ptr)?;
 
     let mut headers_ptr =
