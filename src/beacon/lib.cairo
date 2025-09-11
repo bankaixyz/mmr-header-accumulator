@@ -20,7 +20,7 @@ func run_beacon_mmr_update{
     poseidon_ptr: PoseidonBuiltin*,
     pow2_array: felt*,
     sha256_ptr: felt*,
-}() {
+}() -> (new_keccak_root: Uint256, new_poseidon_root: felt, new_mmr_size: felt) {
     alloc_locals;
 
     let (headers: BeaconHeader*) = alloc();
@@ -67,7 +67,7 @@ func run_beacon_mmr_update{
         is_genesis=is_genesis,
     );
     with peaks_dict_poseidon, peaks_dict_keccak {
-        let (new_mmr_root_poseidon, new_mmr_root_keccak, new_mmr_size) = grow_mmr(
+        let (new_poseidon_root, new_keccak_root, new_mmr_size) = grow_mmr(
             mmr_size=start_mmr_snapshot.elements_count,
             keccak_leafs=keccak_hashes,
             poseidon_leafs=poseidon_hashes,
@@ -78,8 +78,8 @@ func run_beacon_mmr_update{
     with peaks_dict_poseidon, peaks_dict_keccak {
         finalize_mmr(
             end_mmr_snapshot=end_mmr_snapshot,
-            new_mmr_root_poseidon=new_mmr_root_poseidon,
-            new_mmr_root_keccak=new_mmr_root_keccak,
+            new_mmr_root_poseidon=new_poseidon_root,
+            new_mmr_root_keccak=new_keccak_root,
             new_mmr_size=new_mmr_size,
             start_peaks_dict_poseidon=start_peaks_dict_poseidon,
             peaks_dict_poseidon=peaks_dict_poseidon,
@@ -88,7 +88,11 @@ func run_beacon_mmr_update{
         );
     }
 
-    return ();
+    return (
+        new_keccak_root=new_keccak_root,
+        new_poseidon_root=new_poseidon_root,
+        new_mmr_size=new_mmr_size,
+    );
 }
 
 // To ensure we dont have any gaps in the MMR, we verify the proof of the last leaf of each MMR
