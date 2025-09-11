@@ -41,14 +41,22 @@ func run_beacon_mmr_update{
     ) = initialize_peaks(
         start_mmr_snapshot=start_mmr_snapshot, end_mmr_snapshot=end_mmr_snapshot
     );
-
-    // Disable for now
-    // with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
-    //     verify_last_leaf(proof=last_leaf_proof, start_mmr=start_mmr_snapshot);
-    // }
-
+    print_string('init ok');
+    with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
+        verify_last_leaf(proof=last_leaf_proof, start_mmr=start_mmr_snapshot);
+    }
+    print_string('last_leaf ok');
+    
     let (poseidon_hashes: felt*) = alloc();
     let (keccak_hashes: Uint256*) = alloc();
+
+    tempvar is_genesis: felt;
+    // The tree is empty, if the elements_count is 1. in this case, we need to skip the initial linkage check
+    if (start_mmr_snapshot.elements_count == 1) {
+        is_genesis = 1;
+    } else {
+        is_genesis = 0;
+    }
 
     assert_header_linkage(
         previous_root=last_leaf_proof.header_root,
@@ -56,6 +64,7 @@ func run_beacon_mmr_update{
         count=n_headers,
         poseidon_hashes=poseidon_hashes,
         keccak_hashes=keccak_hashes,
+        is_genesis=is_genesis,
     );
     with peaks_dict_poseidon, peaks_dict_keccak {
         let (new_mmr_root_poseidon, new_mmr_root_keccak, new_mmr_size) = grow_mmr(
@@ -139,15 +148,18 @@ func assert_header_linkage{
     count: felt,
     poseidon_hashes: felt*,
     keccak_hashes: Uint256*,
+    is_genesis: felt,
 ) {
     alloc_locals;
     if (count == 0) {
         return ();
     }
 
-    // Ensure the linkage works
-    assert headers.parent_root.high = previous_root.high;
-    assert headers.parent_root.low = previous_root.low;
+    // For genesis, we need to skip the initial linkage check
+    if (is_genesis != 1) {
+        assert headers.parent_root.high = previous_root.high;
+        assert headers.parent_root.low = previous_root.low;
+    }
 
     let parent = headers.parent_root;
     let state = headers.state_root;
@@ -177,5 +189,6 @@ func assert_header_linkage{
         count=count - 1,
         poseidon_hashes=poseidon_hashes + 1,
         keccak_hashes=keccak_hashes + Uint256.SIZE,
+        is_genesis=0,
     );
 }

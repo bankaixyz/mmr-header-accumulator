@@ -42,16 +42,17 @@ pub fn write_beacon_input(
         .end_snapshot
         .to_memory(vm, end_mmr_snapshot_ptr)?;
 
-    // let last_leaf_proof_ptr = get_relocatable_from_var_name(
-    //     "last_leaf_proof",
-    //     vm,
-    //     &hint_data.ids_data,
-    //     &hint_data.ap_tracking,
-    // )?;
+    let last_leaf_proof_ptr = get_relocatable_from_var_name(
+        "last_leaf_proof",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
 
-    // beacon_input
-    //     .last_leaf_proof
-    //     .to_memory(vm, last_leaf_proof_ptr)?;
+    beacon_mmr_update
+        .last_leaf_proof
+        .unwrap()
+        .to_memory(vm, last_leaf_proof_ptr)?;
 
     let mut headers_ptr =
         get_ptr_from_var_name("headers", vm, &hint_data.ids_data, &hint_data.ap_tracking)?;
