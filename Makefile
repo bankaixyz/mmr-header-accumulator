@@ -5,8 +5,11 @@ activate:
 	@echo "Please source the virtual environment activation script:"
 	@echo "  source scripts/activate.sh"
 
-build-cairo:
+build-stone:
 	./scripts/cairo-compile.sh src/beacon/main_stone.cairo
+
+build-stwo:
+	./scripts/cairo-compile.sh src/beacon/main_stwo.cairo
 
 format:
 	./scripts/format.sh

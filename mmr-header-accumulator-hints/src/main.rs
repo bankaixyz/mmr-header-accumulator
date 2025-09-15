@@ -21,6 +21,11 @@ use std::{io, path::Path, path::PathBuf};
 struct Args {
     #[arg(short, long)]
     input_path: PathBuf,
+    #[arg(long, conflicts_with = "stone", required_unless_present = "stone")]
+    stwo: bool,
+
+    #[arg(long, conflicts_with = "stwo", required_unless_present = "stwo")]
+    stone: bool,
 }
 
 fn load_program(path: &str) -> Result<Program, Error> {
@@ -62,7 +67,7 @@ pub fn run_stwo(path: &str, input: BeaconMmrUpdateCairo, output_dir: &str) -> Re
 
     let mut hint_processor = CustomHintProcessor::new();
     let mut exec_scopes = ExecutionScopes::new();
-    exec_scopes.insert_value("beacon_input", input);
+    exec_scopes.insert_value("beacon_mmr_update", input);
 
     let cairo_runner = cairo_run_program_with_initial_scope(
         &program,
@@ -71,7 +76,7 @@ pub fn run_stwo(path: &str, input: BeaconMmrUpdateCairo, output_dir: &str) -> Re
         exec_scopes,
     )?;
 
-    // tracing::info!("{:?}", cairo_runner.get_execution_resources());
+    println!("{:?}", cairo_runner.get_execution_resources());
 
     generate_stwo_files(&cairo_runner, output_dir)?;
     Ok(())
@@ -146,14 +151,19 @@ fn generate_stwo_files(cairo_runner: &CairoRunner, output_dir: &str) -> Result<(
 fn main() {
     let args = Args::parse();
     let input_str = std::fs::read_to_string(args.input_path).unwrap();
+    let stwo = args.stwo;
     let input: BeaconMmrUpdateCairo = serde_json::from_str(&input_str).unwrap();
 
-    println!("got input");
-
-    let output_dir: &'static str = "../output/";
-    let program_path = "../build/main.json";
-    let pie = run(program_path, input.clone()).unwrap();
-
-    pie.write_zip_file(&Path::new(output_dir).join("pie.zip"), true)
-        .unwrap();
+    if stwo {
+        let program_path = "../build/main_stwo.json";
+        let output_dir = "../output/";
+        run_stwo(program_path, input.clone(), output_dir).unwrap();
+        
+    } else {
+        let program_path = "../build/main_stone.json";
+        let output_dir = "../output/";
+        let pie = run(program_path, input.clone()).unwrap();
+        pie.write_zip_file(&Path::new(output_dir).join("pie.zip"), true)
+            .unwrap();
+    }
 }
