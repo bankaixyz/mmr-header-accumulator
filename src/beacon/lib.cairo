@@ -16,7 +16,7 @@ from src.mmr.core import hash_subtree_path_poseidon, hash_subtree_path_keccak
 func run_beacon_mmr_update{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_ptr: PoseidonBuiltin*,
     pow2_array: felt*,
     sha256_ptr: felt*,
@@ -99,7 +99,7 @@ func run_beacon_mmr_update{
 func verify_last_leaf{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_ptr: PoseidonBuiltin*,
     peaks_dict_poseidon: DictAccess*,
     peaks_dict_keccak: DictAccess*,
@@ -141,7 +141,7 @@ func verify_last_leaf{
 func assert_header_linkage{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_ptr: PoseidonBuiltin*,
     pow2_array: felt*,
     sha256_ptr: felt*,

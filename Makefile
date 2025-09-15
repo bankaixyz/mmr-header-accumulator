@@ -6,7 +6,7 @@ activate:
 	@echo "  source scripts/activate.sh"
 
 build-cairo:
-	./scripts/cairo-compile.sh src/beacon/main.cairo
+	./scripts/cairo-compile.sh src/beacon/main_stone.cairo
 
 format:
 	./scripts/format.sh

@@ -1,17 +1,18 @@
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.registers import get_fp_and_pc
-from starkware.cairo.common.cairo_builtins import KeccakBuiltin, PoseidonBuiltin, BitwiseBuiltin
+from starkware.cairo.common.cairo_builtins import PoseidonBuiltin, BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.builtin_poseidon.poseidon import poseidon_hash
-from starkware.cairo.common.builtin_keccak.keccak import keccak_uint256s_bigend
 from src.core.utils import bitwise_divmod
+from src.core.keccak import keccak_uint256_bigend
 
-func keccak_uint256{range_check_ptr, keccak_ptr: KeccakBuiltin*, bitwise_ptr: BitwiseBuiltin*}(
+func keccak_uint256{range_check_ptr, keccak_ptr: felt*, bitwise_ptr: BitwiseBuiltin*}(
     leaf: Uint256
 ) -> (res: Uint256) {
     let (__fp__, _) = get_fp_and_pc();
 
-    let (hash) = keccak_uint256s_bigend(1, &leaf);
+    let (hash) = keccak_uint256_bigend(leaf);
+
     return (res=hash);
 }
 
