@@ -6,7 +6,7 @@ from starkware.cairo.common.cairo_keccak.keccak import cairo_keccak_uint256s_big
 from starkware.cairo.common.builtin_keccak.keccak import keccak_uint256s_bigend as builtin_keccak_uint256s_bigend
 from src.core.utils import bitwise_divmod
 
-const USE_BUILTIN_KECCAK = 1;
+const USE_BUILTIN_KECCAK = 0;
 
 func keccak_uint256_bigend{range_check_ptr, keccak_ptr: felt*, bitwise_ptr: BitwiseBuiltin*}(
     leaf: Uint256

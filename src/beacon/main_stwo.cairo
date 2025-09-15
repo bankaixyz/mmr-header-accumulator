@@ -21,6 +21,9 @@ func main{
     mul_mod_ptr: ModBuiltin*,
 }() {
     alloc_locals;
+    with_attr error_message("USE_BUILTIN_KECCAK must be 0 in stwo mode") {
+        assert USE_BUILTIN_KECCAK = 0;
+    }
 
     let pow2_array: felt* = pow2alloc128();
     let (sha256_ptr, sha256_ptr_start) = SHA256.init();
