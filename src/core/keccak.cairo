@@ -6,6 +6,8 @@ from starkware.cairo.common.cairo_keccak.keccak import cairo_keccak_uint256s_big
 from starkware.cairo.common.builtin_keccak.keccak import keccak_uint256s_bigend as builtin_keccak_uint256s_bigend
 from src.core.utils import bitwise_divmod
 
+const USE_BUILTIN_KECCAK = 1;
+
 func keccak_uint256_bigend{range_check_ptr, keccak_ptr: felt*, bitwise_ptr: BitwiseBuiltin*}(
     leaf: Uint256
 ) -> (res: Uint256) {
@@ -35,16 +37,19 @@ func keccak_uint256s_bigend{range_check_ptr, keccak_ptr: felt*, bitwise_ptr: Bit
 ) -> (res: Uint256) {
     let (__fp__, _) = get_fp_and_pc();
 
-    // Builtin keccak path (STONE): cast felt* to KeccakBuiltin* and call builtin keccak.
-    // let keccak_ptr_builtin = cast(keccak_ptr, KeccakBuiltin*);
-    // let (hash) = builtin_keccak_uint256s_bigend{
-    //     range_check_ptr=range_check_ptr,
-    //     bitwise_ptr=bitwise_ptr,
-    //     keccak_ptr=keccak_ptr_builtin,
-    // }(n_leafs, leafs);
+    if (USE_BUILTIN_KECCAK == 1) {
+        // Builtin keccak path (STONE): cast felt* to KeccakBuiltin* and call builtin keccak.
+        let keccak_ptr_builtin = cast(keccak_ptr, KeccakBuiltin*);
+        let (hash) = builtin_keccak_uint256s_bigend{
+            range_check_ptr=range_check_ptr,
+            bitwise_ptr=bitwise_ptr,
+            keccak_ptr=keccak_ptr_builtin,
+        }(n_leafs, leafs);
 
-    // // Cast ptr back to felt*
-    // tempvar keccak_ptr = cast(keccak_ptr_builtin, felt*);
+        // Cast ptr back to felt*
+        tempvar keccak_ptr = cast(keccak_ptr_builtin, felt*);
+        return (res=hash);
+    }
 
     // Cairo-keccak path (STWO): uncomment to use the felt*-based implementation.
     let (hash) = cairo_keccak_uint256s_bigend(n_leafs, leafs);
