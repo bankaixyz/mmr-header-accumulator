@@ -53,7 +53,9 @@ func initialize_peaks{
     // Compute roots
     let (root_poseidon) = poseidon_hash(start_mmr_snapshot.elements_count, bagged_peaks_poseidon);
 
-    let (root_keccak) = keccak_uint256_pair_bigend(Uint256(start_mmr_snapshot.elements_count, 0), bagged_peaks_keccak);
+    let (root_keccak) = keccak_uint256_pair_bigend(
+        Uint256(start_mmr_snapshot.elements_count, 0), bagged_peaks_keccak
+    );
 
     // Check that the start roots matche the ones provided in the program's input:
     assert 0 = root_poseidon - start_mmr_snapshot.poseidon_root;

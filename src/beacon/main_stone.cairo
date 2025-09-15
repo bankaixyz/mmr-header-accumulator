@@ -29,7 +29,7 @@ func main{
             pow2_array=pow2_array,
             sha256_ptr=sha256_ptr,
         }();
-        
+
         SHA256.finalize(sha256_start_ptr=sha256_ptr_start, sha256_end_ptr=sha256_ptr);
         tempvar keccak_ptr = cast(keccak_felt_ptr, KeccakBuiltin*);
 

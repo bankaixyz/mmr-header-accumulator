@@ -1,5 +1,11 @@
 %builtins output pedersen range_check ecdsa bitwise ec_op keccak poseidon range_check96 add_mod mul_mod
-from starkware.cairo.common.cairo_builtins import BitwiseBuiltin, KeccakBuiltin, PoseidonBuiltin, HashBuiltin, ModBuiltin
+from starkware.cairo.common.cairo_builtins import (
+    BitwiseBuiltin,
+    KeccakBuiltin,
+    PoseidonBuiltin,
+    HashBuiltin,
+    ModBuiltin,
+)
 from starkware.cairo.common.cairo_keccak.keccak import finalize_keccak
 from starkware.cairo.common.alloc import alloc
 from src.beacon.lib import run_beacon_mmr_update

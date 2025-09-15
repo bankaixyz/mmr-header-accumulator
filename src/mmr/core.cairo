@@ -282,7 +282,7 @@ func hash_subtree_path_keccak{
     if (next_height == position_height + 1) {
         // element is right child: parent at position + 1, Keccak(sibling, element)
         let (parent) = keccak_uint256_pair_bigend([inclusion_proof], element);
-        
+
         return hash_subtree_path_keccak(
             parent,
             height + 1,

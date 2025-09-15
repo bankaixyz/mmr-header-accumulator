@@ -158,7 +158,6 @@ fn main() {
         let program_path = "../build/main_stwo.json";
         let output_dir = "../output/";
         run_stwo(program_path, input.clone(), output_dir).unwrap();
-        
     } else {
         let program_path = "../build/main_stone.json";
         let output_dir = "../output/";

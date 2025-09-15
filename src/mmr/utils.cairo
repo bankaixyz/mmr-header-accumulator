@@ -439,10 +439,7 @@ func get_peaks_from_positions_inner{
 // - bag_peaks_poseidon: Poseidon(peak1, Poseidon(peak2, Poseidon(peak3, ...)))
 // - bag_peaks_keccak: Keccak(peak1, Keccak(peak2, Keccak(peak3, ...)))
 func bag_peaks{
-    range_check_ptr,
-    bitwise_ptr: BitwiseBuiltin*,
-    poseidon_ptr: PoseidonBuiltin*,
-    keccak_ptr: felt*,
+    range_check_ptr, bitwise_ptr: BitwiseBuiltin*, poseidon_ptr: PoseidonBuiltin*, keccak_ptr: felt*
 }(peaks_poseidon: felt*, peaks_keccak: Uint256*, peaks_len: felt) -> (
     bag_peaks_poseidon: felt, bag_peaks_keccak: Uint256
 ) {
