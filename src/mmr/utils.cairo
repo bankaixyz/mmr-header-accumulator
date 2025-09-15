@@ -6,9 +6,9 @@ from starkware.cairo.common.builtin_poseidon.poseidon import poseidon_hash
 from starkware.cairo.common.dict_access import DictAccess
 from starkware.cairo.common.dict import dict_write, dict_read
 from starkware.cairo.common.uint256 import Uint256, uint256_reverse_endian
-from starkware.cairo.common.builtin_keccak.keccak import keccak
 from starkware.cairo.common.keccak_utils.keccak_utils import keccak_add_uint256
 from src.core.utils import get_felt_bitlength
+from src.core.keccak import keccak_uint256_pair_bigend
 
 // Asserts that the MMR size is valid given:
 // - our condition on size (1 <= x <= 2^126)
@@ -333,7 +333,7 @@ func get_roots{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
     poseidon_ptr: PoseidonBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     mmr_array_poseidon: felt*,
     mmr_array_keccak: Uint256*,
     mmr_array_len: felt,
@@ -354,12 +354,7 @@ func get_roots{
 
     let (root_poseidon) = poseidon_hash(mmr_size, bagged_peaks_poseidon);
 
-    let (keccak_input: felt*) = alloc();
-    let inputs_start = keccak_input;
-    keccak_add_uint256{inputs=keccak_input}(num=Uint256(mmr_size, 0), bigend=1);
-    keccak_add_uint256{inputs=keccak_input}(num=bagged_peaks_keccak, bigend=1);
-    let (root_keccak: Uint256) = keccak(inputs=inputs_start, n_bytes=2 * 32);
-    let (root_keccak) = uint256_reverse_endian(root_keccak);
+    let (root_keccak) = keccak_uint256_pair_bigend(Uint256(mmr_size, 0), bagged_peaks_keccak);
 
     return (root_poseidon, root_keccak);
 }
@@ -444,10 +439,7 @@ func get_peaks_from_positions_inner{
 // - bag_peaks_poseidon: Poseidon(peak1, Poseidon(peak2, Poseidon(peak3, ...)))
 // - bag_peaks_keccak: Keccak(peak1, Keccak(peak2, Keccak(peak3, ...)))
 func bag_peaks{
-    range_check_ptr,
-    bitwise_ptr: BitwiseBuiltin*,
-    poseidon_ptr: PoseidonBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    range_check_ptr, bitwise_ptr: BitwiseBuiltin*, poseidon_ptr: PoseidonBuiltin*, keccak_ptr: felt*
 }(peaks_poseidon: felt*, peaks_keccak: Uint256*, peaks_len: felt) -> (
     bag_peaks_poseidon: felt, bag_peaks_keccak: Uint256
 ) {
@@ -463,12 +455,8 @@ func bag_peaks{
     let (rec_poseidon, rec_keccak) = bag_peaks(peaks_poseidon + 1, peaks_keccak + 2, peaks_len - 1);
 
     let (res_poseidon) = poseidon_hash(last_peak_poseidon, rec_poseidon);
-    let (keccak_input: felt*) = alloc();
-    let inputs_start = keccak_input;
-    keccak_add_uint256{inputs=keccak_input}(num=last_peak_keccak, bigend=1);
-    keccak_add_uint256{inputs=keccak_input}(num=rec_keccak, bigend=1);
-    let (res_keccak: Uint256) = keccak(inputs=inputs_start, n_bytes=2 * 32);
-    let (res_keccak) = uint256_reverse_endian(res_keccak);
+
+    let (res_keccak) = keccak_uint256_pair_bigend(last_peak_keccak, rec_keccak);
     return (res_poseidon, res_keccak);
 }
 

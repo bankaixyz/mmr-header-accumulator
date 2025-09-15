@@ -18,6 +18,7 @@ from src.mmr.utils import (
 )
 from src.mmr.types import MmrSnapshot
 from src.debug.lib import print_felt_hex, print_uint256, print_felt
+from src.core.keccak import keccak_uint256_pair_bigend
 
 // Stores the values inside peaks_values_poseidon and peaks_values_keccak in two dictionaries represented by their end pointers,
 // such that:
@@ -90,7 +91,7 @@ func construct_mmr{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
     poseidon_ptr: PoseidonBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_leafs: felt*,
     mmr_array_poseidon: felt*,
     keccak_leafs: Uint256*,
@@ -146,7 +147,7 @@ func merge_subtrees_if_applicable{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
     poseidon_ptr: PoseidonBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     mmr_array_poseidon: felt*,
     mmr_array_keccak: Uint256*,
     mmr_array_len: felt,
@@ -176,12 +177,7 @@ func merge_subtrees_if_applicable{
 
         // Compute H(left, right) for both hash functions
         let (hash_poseidon) = poseidon_hash(x_poseidon, y_poseidon);
-        let (keccak_input: felt*) = alloc();
-        let inputs_start = keccak_input;
-        keccak_add_uint256{inputs=keccak_input}(num=x_keccak, bigend=1);
-        keccak_add_uint256{inputs=keccak_input}(num=y_keccak, bigend=1);
-        let (res_keccak_little: Uint256) = keccak(inputs=inputs_start, n_bytes=2 * 32);
-        let (res_keccak) = uint256_reverse_endian(res_keccak_little);
+        let (res_keccak) = keccak_uint256_pair_bigend(x_keccak, y_keccak);
 
         // Append each parent to the corresponding MMR arrays
         assert mmr_array_poseidon[mmr_array_len] = hash_poseidon;
@@ -267,7 +263,7 @@ func hash_subtree_path_poseidon{range_check_ptr, poseidon_ptr: PoseidonBuiltin*,
 // - Else element is a left child. Parent position is pos + 2^(height+1) and Keccak
 //   is computed as Keccak(element, sibling).
 func hash_subtree_path_keccak{
-    range_check_ptr, bitwise_ptr: BitwiseBuiltin*, keccak_ptr: KeccakBuiltin*, pow2_array: felt*
+    range_check_ptr, bitwise_ptr: BitwiseBuiltin*, keccak_ptr: felt*, pow2_array: felt*
 }(
     element: Uint256,
     height: felt,
@@ -285,12 +281,8 @@ func hash_subtree_path_keccak{
 
     if (next_height == position_height + 1) {
         // element is right child: parent at position + 1, Keccak(sibling, element)
-        let (buf: felt*) = alloc();
-        let buf_start = buf;
-        keccak_add_uint256{inputs=buf}(num=[inclusion_proof], bigend=1);
-        keccak_add_uint256{inputs=buf}(num=element, bigend=1);
-        let (parent_be: Uint256) = keccak(inputs=buf_start, n_bytes=2 * 32);
-        let (parent) = uint256_reverse_endian(parent_be);
+        let (parent) = keccak_uint256_pair_bigend([inclusion_proof], element);
+
         return hash_subtree_path_keccak(
             parent,
             height + 1,
@@ -300,12 +292,8 @@ func hash_subtree_path_keccak{
         );
     } else {
         // element is left child: parent at position + 2^(height+1) - 1, Keccak(element, sibling)
-        let (buf2: felt*) = alloc();
-        let buf2_start = buf2;
-        keccak_add_uint256{inputs=buf2}(num=element, bigend=1);
-        keccak_add_uint256{inputs=buf2}(num=[inclusion_proof], bigend=1);
-        let (parent_be2: Uint256) = keccak(inputs=buf2_start, n_bytes=2 * 32);
-        let (parent2) = uint256_reverse_endian(parent_be2);
+        let (parent2) = keccak_uint256_pair_bigend(element, [inclusion_proof]);
+
         let next_pos = position + pow2_array[height + 1];
         return hash_subtree_path_keccak(
             parent2,

@@ -16,11 +16,13 @@ from src.mmr.core import hash_subtree_path_poseidon, hash_subtree_path_keccak
 func run_beacon_mmr_update{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_ptr: PoseidonBuiltin*,
     pow2_array: felt*,
     sha256_ptr: felt*,
-}() -> (new_keccak_root: Uint256, new_poseidon_root: felt, new_mmr_size: felt, last_header_root: Uint256) {
+}() -> (
+    new_keccak_root: Uint256, new_poseidon_root: felt, new_mmr_size: felt, last_header_root: Uint256
+) {
     alloc_locals;
 
     let (headers: BeaconHeader*) = alloc();
@@ -33,18 +35,13 @@ func run_beacon_mmr_update{
     %{ write_beacon_input() %}
 
     let (
-        start_peaks_dict_poseidon,
-        start_peaks_dict_keccak,
-        peaks_dict_poseidon,
-        peaks_dict_keccak,
-    ) = initialize_peaks(
-        start_mmr_snapshot=start_mmr_snapshot, end_mmr_snapshot=end_mmr_snapshot
-    );
+        start_peaks_dict_poseidon, start_peaks_dict_keccak, peaks_dict_poseidon, peaks_dict_keccak
+    ) = initialize_peaks(start_mmr_snapshot=start_mmr_snapshot, end_mmr_snapshot=end_mmr_snapshot);
 
     with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
         verify_last_leaf(proof=last_leaf_proof, start_mmr=start_mmr_snapshot);
     }
-    
+
     let (poseidon_hashes: felt*) = alloc();
     let (keccak_hashes: Uint256*) = alloc();
 
@@ -99,7 +96,7 @@ func run_beacon_mmr_update{
 func verify_last_leaf{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_ptr: PoseidonBuiltin*,
     peaks_dict_poseidon: DictAccess*,
     peaks_dict_keccak: DictAccess*,
@@ -141,7 +138,7 @@ func verify_last_leaf{
 func assert_header_linkage{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_ptr: PoseidonBuiltin*,
     pow2_array: felt*,
     sha256_ptr: felt*,

@@ -1,6 +1,5 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin, KeccakBuiltin, PoseidonBuiltin
 from starkware.cairo.common.builtin_poseidon.poseidon import poseidon_hash
-from starkware.cairo.common.builtin_keccak.keccak import keccak
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.keccak_utils.keccak_utils import keccak_add_uint256
 from starkware.cairo.common.uint256 import Uint256, uint256_reverse_endian
@@ -19,11 +18,12 @@ from src.mmr.utils import (
     get_roots,
 )
 from src.debug.lib import print_felt_hex, print_uint256, print_felt, print_string
+from src.core.keccak import keccak_uint256_pair_bigend
 
 func initialize_peaks{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_ptr: PoseidonBuiltin*,
     pow2_array: felt*,
 }(start_mmr_snapshot: MmrSnapshot, end_mmr_snapshot: MmrSnapshot) -> (
@@ -53,12 +53,9 @@ func initialize_peaks{
     // Compute roots
     let (root_poseidon) = poseidon_hash(start_mmr_snapshot.elements_count, bagged_peaks_poseidon);
 
-    let (keccak_input: felt*) = alloc();
-    let inputs_start = keccak_input;
-    keccak_add_uint256{inputs=keccak_input}(num=Uint256(start_mmr_snapshot.elements_count, 0), bigend=1);
-    keccak_add_uint256{inputs=keccak_input}(num=bagged_peaks_keccak, bigend=1);
-    let (root_keccak: Uint256) = keccak(inputs=inputs_start, n_bytes=2 * 32);
-    let (root_keccak) = uint256_reverse_endian(root_keccak);
+    let (root_keccak) = keccak_uint256_pair_bigend(
+        Uint256(start_mmr_snapshot.elements_count, 0), bagged_peaks_keccak
+    );
 
     // Check that the start roots matche the ones provided in the program's input:
     assert 0 = root_poseidon - start_mmr_snapshot.poseidon_root;
@@ -88,7 +85,7 @@ func initialize_peaks{
 func grow_mmr{
     range_check_ptr,
     bitwise_ptr: BitwiseBuiltin*,
-    keccak_ptr: KeccakBuiltin*,
+    keccak_ptr: felt*,
     poseidon_ptr: PoseidonBuiltin*,
     peaks_dict_poseidon: DictAccess*,
     peaks_dict_keccak: DictAccess*,
