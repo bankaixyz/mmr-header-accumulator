@@ -34,8 +34,7 @@ fn load_program(path: &str) -> Result<Program, Error> {
         // Try converting absolute path to relative
         let relative_path = path.strip_prefix('/').unwrap_or(path);
         println!(
-            "Absolute path not found, trying relative: {}",
-            relative_path
+            "Absolute path not found, trying relative: {relative_path}"
         );
         relative_path
     } else {
@@ -158,6 +157,7 @@ fn main() {
         let program_path = "../build/main_stwo.json";
         let output_dir = "../output/";
         run_stwo(program_path, input.clone(), output_dir).unwrap();
+        
     } else {
         let program_path = "../build/main_stone.json";
         let output_dir = "../output/";
