@@ -35,3 +35,13 @@ pub struct BeaconMmrUpdateCairo {
     pub added_headers: Vec<BeaconHeaderCairo>,
     pub last_leaf_proof: LastLeafProofCairo,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionMmrUpdateCairo {
+    pub start_snapshot: MmrSnapshotCairo,
+    pub end_snapshot: MmrSnapshotCairo,
+    pub added_headers: Vec<ExecutionHeaderCairo>,
+    pub last_leaf_proof: LastLeafProofCairo,
+}
+
+pub type ExecutionHeaderCairo = Vec<Vec<u8>>;
