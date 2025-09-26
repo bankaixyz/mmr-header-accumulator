@@ -185,7 +185,7 @@ func assert_header_linkage{
         headers=headers,
         headers_bytes_len=headers_bytes_len,
         index=index + 1,
-        count=count - 1,
+        count=count,
         poseidon_hashes=poseidon_hashes + 1,
         keccak_hashes=keccak_hashes + Uint256.SIZE,
         is_genesis=0,
