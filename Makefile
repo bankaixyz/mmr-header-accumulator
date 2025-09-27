@@ -9,7 +9,7 @@ build-stone:
 	./scripts/cairo-compile.sh src/beacon/main_stone.cairo
 
 build-beacon:
-	./scripts/cairo-compile.sh src/beacon/main_stwo.cairo
+	./scripts/cairo-compile.sh src/beacon/beacon_stwo.cairo
 
 build-execution:
 	./scripts/cairo-compile.sh src/execution/execution_stwo.cairo

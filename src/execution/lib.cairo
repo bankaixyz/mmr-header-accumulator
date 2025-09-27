@@ -8,7 +8,7 @@ from starkware.cairo.common.dict import dict_read
 from src.core.ssz import SSZ
 from src.core.sha import SHA256
 from src.execution.utils import get_hash_value
-from src.debug.lib import print_uint256, print_string
+from src.debug.lib import print_uint256, print_string, print_felt_hex
 from src.mmr.leaf_hash import poseidon_uint256, keccak_uint256
 from src.mmr.types import MmrSnapshot, LastLeafProof
 from src.mmr.lib import initialize_peaks, finalize_mmr, grow_mmr
@@ -40,7 +40,7 @@ func run_execution_mmr_update{
     let (
         start_peaks_dict_poseidon, start_peaks_dict_keccak, peaks_dict_poseidon, peaks_dict_keccak
     ) = initialize_peaks(start_mmr_snapshot=start_mmr_snapshot, end_mmr_snapshot=end_mmr_snapshot);
-
+    
     with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
         verify_last_leaf(proof=last_leaf_proof, start_mmr=start_mmr_snapshot);
     }
@@ -75,6 +75,14 @@ func run_execution_mmr_update{
             n_headers=n_headers,
         );
     }
+
+    print_string('GROWING Execution MMR');
+    print_string('new_poseidon_root');
+    print_felt_hex(new_poseidon_root);
+    print_string('new_keccak_root');
+    print_uint256(new_keccak_root);
+    print_string('new_mmr_size');
+    print_felt_hex(new_mmr_size);
 
     with peaks_dict_poseidon, peaks_dict_keccak {
         finalize_mmr(
@@ -169,10 +177,10 @@ func assert_header_linkage{
         assert parent_hash.low = previous_header_hash.low;
     }
 
-    let (header_hash_keccak: Uint256) = cairo_keccak(
+    let (header_hash_keccak_le: Uint256) = cairo_keccak(
         inputs=headers[index], n_bytes=headers_bytes_len[index]
     );
-
+    let (header_hash_keccak) = uint256_reverse_endian(header_hash_keccak_le);
     let (poseidon_hash) = poseidon_uint256(header_hash_keccak);
     let (keccak_hash) = keccak_uint256(header_hash_keccak);
 
