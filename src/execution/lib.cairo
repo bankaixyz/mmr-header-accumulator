@@ -40,7 +40,7 @@ func run_execution_mmr_update{
     let (
         start_peaks_dict_poseidon, start_peaks_dict_keccak, peaks_dict_poseidon, peaks_dict_keccak
     ) = initialize_peaks(start_mmr_snapshot=start_mmr_snapshot, end_mmr_snapshot=end_mmr_snapshot);
-    
+
     with pow2_array, peaks_dict_poseidon, peaks_dict_keccak {
         verify_last_leaf(proof=last_leaf_proof, start_mmr=start_mmr_snapshot);
     }
@@ -198,6 +198,4 @@ func assert_header_linkage{
         keccak_hashes=keccak_hashes + Uint256.SIZE,
         is_genesis=0,
     );
-
-    
 }
