@@ -4,15 +4,19 @@ use cairo_vm_base::vm::cairo_vm::{
     cairo_run::{
         self, cairo_run_program_with_initial_scope, write_encoded_memory, write_encoded_trace,
     },
-    types::{exec_scope::ExecutionScopes, layout_name::LayoutName, program::Program},
+    types::{
+        exec_scope::ExecutionScopes, layout_name::LayoutName, program::Program as CairoProgram,
+    },
     vm::{
         errors::trace_errors::TraceError, runners::cairo_pie::CairoPie,
         runners::cairo_runner::CairoRunner,
     },
 };
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use mmr_header_accumulator_hints::{
-    error::Error, hint_processor::CustomHintProcessor, types::BeaconMmrUpdateCairo,
+    error::Error,
+    hint_processor::CustomHintProcessor,
+    types::{BeaconMmrUpdateCairo, ExecutionMmrUpdateCairo},
 };
 use std::{io, path::Path, path::PathBuf};
 
@@ -26,16 +30,23 @@ struct Args {
 
     #[arg(long, conflicts_with = "stwo", required_unless_present = "stwo")]
     stone: bool,
+
+    #[arg(long, value_enum, default_value_t = CliProgram::Beacon)]
+    program: CliProgram,
 }
 
-fn load_program(path: &str) -> Result<Program, Error> {
+#[derive(Copy, Clone, Debug, ValueEnum)]
+enum CliProgram {
+    Beacon,
+    Execution,
+}
+
+fn load_program(path: &str) -> Result<CairoProgram, Error> {
     // Check if it's an absolute path that doesn't exist, try relative
     let final_path = if path.starts_with('/') && !std::path::Path::new(path).exists() {
         // Try converting absolute path to relative
         let relative_path = path.strip_prefix('/').unwrap_or(path);
-        println!(
-            "Absolute path not found, trying relative: {relative_path}"
-        );
+        println!("Absolute path not found, trying relative: {relative_path}");
         relative_path
     } else {
         path
@@ -48,7 +59,7 @@ fn load_program(path: &str) -> Result<Program, Error> {
         ..Default::default()
     };
 
-    let program = Program::from_bytes(&program_file, Some(cairo_run_config.entrypoint))?;
+    let program = CairoProgram::from_bytes(&program_file, Some(cairo_run_config.entrypoint))?;
     println!("Program loaded successfully");
     Ok(program)
 }
@@ -67,6 +78,38 @@ pub fn run_stwo(path: &str, input: BeaconMmrUpdateCairo, output_dir: &str) -> Re
     let mut hint_processor = CustomHintProcessor::new();
     let mut exec_scopes = ExecutionScopes::new();
     exec_scopes.insert_value("beacon_mmr_update", input);
+
+    let cairo_runner = cairo_run_program_with_initial_scope(
+        &program,
+        &cairo_run_config,
+        &mut hint_processor,
+        exec_scopes,
+    )?;
+
+    println!("{:?}", cairo_runner.get_execution_resources());
+
+    generate_stwo_files(&cairo_runner, output_dir)?;
+    Ok(())
+}
+
+pub fn run_stwo_execution(
+    path: &str,
+    input: ExecutionMmrUpdateCairo,
+    output_dir: &str,
+) -> Result<(), Error> {
+    let program = load_program(path)?;
+    let cairo_run_config = cairo_run::CairoRunConfig {
+        allow_missing_builtins: None, // Optional
+        layout: LayoutName::all_cairo_stwo,
+        relocate_mem: true,
+        trace_enabled: true,
+        proof_mode: true,
+        ..Default::default()
+    };
+
+    let mut hint_processor = CustomHintProcessor::new();
+    let mut exec_scopes = ExecutionScopes::new();
+    exec_scopes.insert_value("execution_mmr_update", input);
 
     let cairo_runner = cairo_run_program_with_initial_scope(
         &program,
@@ -151,18 +194,31 @@ fn main() {
     let args = Args::parse();
     let input_str = std::fs::read_to_string(args.input_path).unwrap();
     let stwo = args.stwo;
-    let input: BeaconMmrUpdateCairo = serde_json::from_str(&input_str).unwrap();
+    let program = args.program;
 
-    if stwo {
-        let program_path = "../build/main_stwo.json";
-        let output_dir = "../output/";
-        run_stwo(program_path, input.clone(), output_dir).unwrap();
-        
-    } else {
-        let program_path = "../build/main_stone.json";
-        let output_dir = "../output/";
-        let pie = run(program_path, input.clone()).unwrap();
-        pie.write_zip_file(&Path::new(output_dir).join("pie.zip"), true)
-            .unwrap();
+    match program {
+        CliProgram::Beacon => {
+            let input: BeaconMmrUpdateCairo = serde_json::from_str(&input_str).unwrap();
+            if stwo {
+                let program_path = "build/beacon_stwo.json";
+                let output_dir = "output/";
+                run_stwo(program_path, input.clone(), output_dir).unwrap();
+            } else {
+                let program_path = "build/main_stone.json";
+                let output_dir = "output/";
+                let pie = run(program_path, input.clone()).unwrap();
+                pie.write_zip_file(&Path::new(output_dir).join("pie.zip"), true)
+                    .unwrap();
+            }
+        }
+        CliProgram::Execution => {
+            if !stwo {
+                panic!("execution program requires --stwo");
+            }
+            let input: ExecutionMmrUpdateCairo = serde_json::from_str(&input_str).unwrap();
+            let program_path = "build/execution_stwo.json";
+            let output_dir = "output/";
+            run_stwo_execution(program_path, input.clone(), output_dir).unwrap();
+        }
     }
 }

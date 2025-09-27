@@ -8,7 +8,10 @@ use cairo_vm_base::vm::cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine;
 use cairo_vm_base::vm::cairo_vm::Felt252;
 
-use crate::types::{BeaconHeaderCairo, BeaconMmrUpdateCairo, LastLeafProofCairo, MmrSnapshotCairo};
+use crate::types::{
+    BeaconHeaderCairo, BeaconMmrUpdateCairo, ExecutionHeaderCairo, ExecutionMmrUpdateCairo,
+    LastLeafProofCairo, MmrSnapshotCairo,
+};
 
 pub const HINT_WRITE_BEACON_INPUT: &str = "write_beacon_input()";
 
@@ -69,6 +72,81 @@ pub fn write_beacon_input(
     vm.insert_value(
         n_headers,
         Felt252::from(beacon_mmr_update.added_headers.len()),
+    )?;
+
+    Ok(())
+}
+
+pub const HINT_WRITE_EXECUTION_INPUT: &str = "write_execution_input()";
+
+pub fn write_execution_input(
+    vm: &mut VirtualMachine,
+    exec_scopes: &mut ExecutionScopes,
+    hint_data: &HintProcessorData,
+    _constants: &HashMap<String, Felt252>,
+) -> Result<(), HintError> {
+    let execution_mmr_update: ExecutionMmrUpdateCairo = exec_scopes
+        .get::<ExecutionMmrUpdateCairo>("execution_mmr_update")
+        .unwrap();
+    let start_mmr_snapshot_ptr = get_relocatable_from_var_name(
+        "start_mmr_snapshot",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
+
+    execution_mmr_update
+        .start_snapshot
+        .to_memory(vm, start_mmr_snapshot_ptr)?;
+
+    let end_mmr_snapshot_ptr = get_relocatable_from_var_name(
+        "end_mmr_snapshot",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
+    execution_mmr_update
+        .end_snapshot
+        .to_memory(vm, end_mmr_snapshot_ptr)?;
+
+    let last_leaf_proof_ptr = get_relocatable_from_var_name(
+        "last_leaf_proof",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
+
+    execution_mmr_update
+        .last_leaf_proof
+        .to_memory(vm, last_leaf_proof_ptr)?;
+
+    let mut headers_ptr =
+        get_ptr_from_var_name("headers", vm, &hint_data.ids_data, &hint_data.ap_tracking)?;
+
+    let mut headers_bytes_len_ptr = get_ptr_from_var_name(
+        "headers_bytes_len",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
+
+    for header in execution_mmr_update.added_headers.iter() {
+        headers_ptr = header.to_memory(vm, headers_ptr)?;
+
+        let bytes_len = header.bytes_len();
+        vm.insert_value(headers_bytes_len_ptr, Felt252::from(bytes_len))?;
+        headers_bytes_len_ptr = (headers_bytes_len_ptr + 1)?;
+    }
+
+    let n_headers = get_relocatable_from_var_name(
+        "n_headers",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
+    vm.insert_value(
+        n_headers,
+        Felt252::from(execution_mmr_update.added_headers.len()),
     )?;
 
     Ok(())
@@ -184,5 +262,27 @@ impl CairoWritable for BeaconHeaderCairo {
 
     fn n_fields() -> usize {
         8
+    }
+}
+
+impl CairoWritable for ExecutionHeaderCairo {
+    fn to_memory(
+        &self,
+        vm: &mut cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine,
+        address: cairo_vm_base::vm::cairo_vm::types::relocatable::Relocatable,
+    ) -> Result<
+        cairo_vm_base::vm::cairo_vm::types::relocatable::Relocatable,
+        cairo_vm_base::vm::cairo_vm::vm::errors::hint_errors::HintError,
+    > {
+        let address_start = address;
+        let address = self.header.to_memory(vm, address)?;
+
+        assert!(address == (address_start + Self::n_fields())?);
+
+        Ok(address)
+    }
+
+    fn n_fields() -> usize {
+        1
     }
 }

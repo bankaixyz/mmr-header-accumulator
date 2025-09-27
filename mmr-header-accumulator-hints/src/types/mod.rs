@@ -1,4 +1,4 @@
-use cairo_vm_base::types::{felt::Felt, uint256::Uint256};
+use cairo_vm_base::types::{felt::Felt, keccak_bytes::KeccakBytes, uint256::Uint256};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -34,4 +34,24 @@ pub struct BeaconMmrUpdateCairo {
     pub end_snapshot: MmrSnapshotCairo,
     pub added_headers: Vec<BeaconHeaderCairo>,
     pub last_leaf_proof: LastLeafProofCairo,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionMmrUpdateCairo {
+    pub start_snapshot: MmrSnapshotCairo,
+    pub end_snapshot: MmrSnapshotCairo,
+    pub added_headers: Vec<ExecutionHeaderCairo>,
+    pub last_leaf_proof: LastLeafProofCairo,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionHeaderCairo {
+    pub header: KeccakBytes,
+    pub block_number: Felt,
+}
+
+impl ExecutionHeaderCairo {
+    pub fn bytes_len(&self) -> usize {
+        self.header.0.len()
+    }
 }

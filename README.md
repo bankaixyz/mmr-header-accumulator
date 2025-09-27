@@ -20,22 +20,40 @@ Before running the programs, you must activate the virtual environment.
 source scripts/activate.sh
 ```
 
-### 3. Compile the Cairo Program
+### 3. Compile the Cairo Programs
 
-Compile the main Cairo program to produce a JSON artifact that the hint processor can execute.
-
-```bash
-make build-cairo
-```
-This will compile `src/beacon/main.cairo` and create `build/main.json`.
-
-### 4. Run the Hint Processor
-
-Finally, run the Rust hint processor to execute the compiled Cairo program with a given input file. The following command runs the processor with `input.json` from the project root. The output PIE file will be saved in the `output/` directory.
+Compile the programs to produce JSON artifacts the hint processor can execute (from repo root):
 
 ```bash
-cargo run -- --input-path example_input.json
+make build-beacon       # builds build/beacon_stwo.json
+make build-execution    # builds build/execution_stwo.json
 ```
+
+### 4. Run the Hint Processor (from repo root)
+
+Run the Rust hint processor against a given input file. Outputs are written to `output/`.
+
+Beacon (Stone layout):
+```bash
+cargo run -p mmr-header-accumulator-hints -r -- --stone --program beacon \
+  --input-path example_input_beacon.json
+```
+
+Beacon (STWO layout):
+```bash
+cargo run -p mmr-header-accumulator-hints -r -- --stwo --program beacon \
+  --input-path example_input_beacon.json
+```
+
+Execution (STWO layout only):
+```bash
+cargo run -p mmr-header-accumulator-hints -r -- --stwo --program execution \
+  --input-path example_input_execution.json
+```
+
+Notes:
+- Beacon Stone run produces a `output/pie.zip`.
+- STWO runs (beacon/execution) produce `output/memory.bin`, `output/trace.bin`, and AIR input JSONs.
 
 ### 5. Format the Cairo Code
 
@@ -72,12 +90,10 @@ The core of this repository is a Cairo program that provably adds a batch of new
 Currently, this accumulator supports block headers from the following chains:
 
 -   **Ethereum Beacon Chain**: Fully supported.
+-   **Ethereum Execution Chain**: Supported (STWO only).
 
 ### Upcoming Support
 
-Work is in progress to extend support to the following chains:
-
--   **Ethereum Execution Chain**: In progress.
 -   **Major L2s**: Planned for future releases.
 
 ## Acknowledgements
