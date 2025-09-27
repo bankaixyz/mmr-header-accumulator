@@ -8,7 +8,10 @@ use cairo_vm_base::vm::cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine;
 use cairo_vm_base::vm::cairo_vm::Felt252;
 
-use crate::types::{BeaconHeaderCairo, BeaconMmrUpdateCairo, ExecutionHeaderCairo, ExecutionMmrUpdateCairo, LastLeafProofCairo, MmrSnapshotCairo};
+use crate::types::{
+    BeaconHeaderCairo, BeaconMmrUpdateCairo, ExecutionHeaderCairo, ExecutionMmrUpdateCairo,
+    LastLeafProofCairo, MmrSnapshotCairo,
+};
 
 pub const HINT_WRITE_BEACON_INPUT: &str = "write_beacon_input()";
 
@@ -120,8 +123,12 @@ pub fn write_execution_input(
     let mut headers_ptr =
         get_ptr_from_var_name("headers", vm, &hint_data.ids_data, &hint_data.ap_tracking)?;
 
-    let mut headers_bytes_len_ptr =
-        get_ptr_from_var_name("headers_bytes_len", vm, &hint_data.ids_data, &hint_data.ap_tracking)?;
+    let mut headers_bytes_len_ptr = get_ptr_from_var_name(
+        "headers_bytes_len",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
 
     for header in execution_mmr_update.added_headers.iter() {
         headers_ptr = header.to_memory(vm, headers_ptr)?;
@@ -278,5 +285,4 @@ impl CairoWritable for ExecutionHeaderCairo {
     fn n_fields() -> usize {
         1
     }
-
 }

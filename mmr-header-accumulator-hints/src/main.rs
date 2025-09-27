@@ -4,7 +4,9 @@ use cairo_vm_base::vm::cairo_vm::{
     cairo_run::{
         self, cairo_run_program_with_initial_scope, write_encoded_memory, write_encoded_trace,
     },
-    types::{exec_scope::ExecutionScopes, layout_name::LayoutName, program::Program as CairoProgram},
+    types::{
+        exec_scope::ExecutionScopes, layout_name::LayoutName, program::Program as CairoProgram,
+    },
     vm::{
         errors::trace_errors::TraceError, runners::cairo_pie::CairoPie,
         runners::cairo_runner::CairoRunner,
@@ -12,7 +14,9 @@ use cairo_vm_base::vm::cairo_vm::{
 };
 use clap::{Parser, ValueEnum};
 use mmr_header_accumulator_hints::{
-    error::Error, hint_processor::CustomHintProcessor, types::{BeaconMmrUpdateCairo, ExecutionMmrUpdateCairo},
+    error::Error,
+    hint_processor::CustomHintProcessor,
+    types::{BeaconMmrUpdateCairo, ExecutionMmrUpdateCairo},
 };
 use std::{io, path::Path, path::PathBuf};
 
@@ -88,7 +92,11 @@ pub fn run_stwo(path: &str, input: BeaconMmrUpdateCairo, output_dir: &str) -> Re
     Ok(())
 }
 
-pub fn run_stwo_execution(path: &str, input: ExecutionMmrUpdateCairo, output_dir: &str) -> Result<(), Error> {
+pub fn run_stwo_execution(
+    path: &str,
+    input: ExecutionMmrUpdateCairo,
+    output_dir: &str,
+) -> Result<(), Error> {
     let program = load_program(path)?;
     let cairo_run_config = cairo_run::CairoRunConfig {
         allow_missing_builtins: None, // Optional
@@ -192,12 +200,12 @@ fn main() {
         CliProgram::Beacon => {
             let input: BeaconMmrUpdateCairo = serde_json::from_str(&input_str).unwrap();
             if stwo {
-                let program_path = "../build/beacon_stwo.json";
-                let output_dir = "../output/";
+                let program_path = "build/beacon_stwo.json";
+                let output_dir = "output/";
                 run_stwo(program_path, input.clone(), output_dir).unwrap();
             } else {
-                let program_path = "../build/main_stone.json";
-                let output_dir = "../output/";
+                let program_path = "build/main_stone.json";
+                let output_dir = "output/";
                 let pie = run(program_path, input.clone()).unwrap();
                 pie.write_zip_file(&Path::new(output_dir).join("pie.zip"), true)
                     .unwrap();
@@ -208,8 +216,8 @@ fn main() {
                 panic!("execution program requires --stwo");
             }
             let input: ExecutionMmrUpdateCairo = serde_json::from_str(&input_str).unwrap();
-            let program_path = "../build/execution_stwo.json";
-            let output_dir = "../output/";
+            let program_path = "build/execution_stwo.json";
+            let output_dir = "output/";
             run_stwo_execution(program_path, input.clone(), output_dir).unwrap();
         }
     }
