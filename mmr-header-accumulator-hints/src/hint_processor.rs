@@ -1,5 +1,5 @@
 use crate::hints::{
-    input::{write_beacon_input, HINT_WRITE_BEACON_INPUT},
+    input::{write_beacon_input, write_execution_input, HINT_WRITE_BEACON_INPUT, HINT_WRITE_EXECUTION_INPUT},
     mmr::{
         hint_is_position_in_mmr_array, mmr_bit_length, mmr_left_child,
         HINT_IS_POSITION_IN_MMR_ARRAY, MMR_BIT_LENGTH, MMR_LEFT_CHILD,
@@ -78,6 +78,7 @@ impl HintProcessorLogic for CustomHintProcessor {
 
             let res = match hint_code {
                 HINT_WRITE_BEACON_INPUT => write_beacon_input(vm, exec_scopes, hpd, constants),
+                HINT_WRITE_EXECUTION_INPUT => write_execution_input(vm, exec_scopes, hpd, constants),
                 _ => Err(HintError::UnknownHint(
                     hint_code.to_string().into_boxed_str(),
                 )),
