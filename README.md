@@ -35,19 +35,19 @@ Run the Rust hint processor against a given input file. Outputs are written to `
 
 Beacon (Stone layout):
 ```bash
-cargo run -p mmr-header-accumulator-hints -- --stone --program beacon \
+cargo run -p mmr-header-accumulator-hints -r -- --stone --program beacon \
   --input-path example_input_beacon.json
 ```
 
 Beacon (STWO layout):
 ```bash
-cargo run -p mmr-header-accumulator-hints -- --stwo --program beacon \
+cargo run -p mmr-header-accumulator-hints -r -- --stwo --program beacon \
   --input-path example_input_beacon.json
 ```
 
 Execution (STWO layout only):
 ```bash
-cargo run -p mmr-header-accumulator-hints -- --stwo --program execution \
+cargo run -p mmr-header-accumulator-hints -r -- --stwo --program execution \
   --input-path example_input_execution.json
 ```
 
