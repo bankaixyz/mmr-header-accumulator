@@ -27,6 +27,7 @@ Compile the programs to produce JSON artifacts the hint processor can execute (f
 ```bash
 make build-beacon       # builds build/beacon_stwo.json
 make build-execution    # builds build/execution_stwo.json
+make build-bankai       # builds build/bankai_stwo.json
 ```
 
 ### 4. Run the Hint Processor (from repo root)
@@ -51,9 +52,15 @@ cargo run -p mmr-header-accumulator-hints -r -- --stwo --program execution \
   --input-path example_input_execution.json
 ```
 
+Bankai (STWO layout only):
+```bash
+cargo run -p mmr-header-accumulator-hints -r -- --stwo --program bankai \
+  --input-path <bankai_input.json>
+```
+
 Notes:
 - Beacon Stone run produces a `output/pie.zip`.
-- STWO runs (beacon/execution) produce `output/memory.bin`, `output/trace.bin`, and AIR input JSONs.
+- STWO runs (beacon/execution/bankai) produce `output/memory.bin`, `output/trace.bin`, and AIR input JSONs.
 
 ### 5. Format the Cairo Code
 
@@ -91,6 +98,7 @@ Currently, this accumulator supports block headers from the following chains:
 
 -   **Ethereum Beacon Chain**: Fully supported.
 -   **Ethereum Execution Chain**: Supported (STWO only).
+-   **Bankai Chain**: Supported (STWO only).
 
 ### Upcoming Support
 

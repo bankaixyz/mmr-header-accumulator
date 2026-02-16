@@ -45,6 +45,12 @@ pub struct ExecutionMmrUpdateCairo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BankaiMmrUpdateCairo {
+    pub start_snapshot: MmrSnapshotCairo,
+    pub end_snapshot: MmrSnapshotCairo,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionHeaderCairo {
     pub header: KeccakBytes,
     pub block_number: Felt,

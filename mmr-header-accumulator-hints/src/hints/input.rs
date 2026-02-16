@@ -9,8 +9,8 @@ use cairo_vm_base::vm::cairo_vm::vm::vm_core::VirtualMachine;
 use cairo_vm_base::vm::cairo_vm::Felt252;
 
 use crate::types::{
-    BeaconHeaderCairo, BeaconMmrUpdateCairo, ExecutionHeaderCairo, ExecutionMmrUpdateCairo,
-    LastLeafProofCairo, MmrSnapshotCairo,
+    BankaiMmrUpdateCairo, BeaconHeaderCairo, BeaconMmrUpdateCairo, ExecutionHeaderCairo,
+    ExecutionMmrUpdateCairo, LastLeafProofCairo, MmrSnapshotCairo,
 };
 
 pub const HINT_WRITE_BEACON_INPUT: &str = "write_beacon_input()";
@@ -78,6 +78,8 @@ pub fn write_beacon_input(
 }
 
 pub const HINT_WRITE_EXECUTION_INPUT: &str = "write_execution_input()";
+
+pub const HINT_WRITE_BANKAI_INPUT: &str = "write_bankai_input()";
 
 pub fn write_execution_input(
     vm: &mut VirtualMachine,
@@ -148,6 +150,39 @@ pub fn write_execution_input(
         n_headers,
         Felt252::from(execution_mmr_update.added_headers.len()),
     )?;
+
+    Ok(())
+}
+
+pub fn write_bankai_input(
+    vm: &mut VirtualMachine,
+    exec_scopes: &mut ExecutionScopes,
+    hint_data: &HintProcessorData,
+    _constants: &HashMap<String, Felt252>,
+) -> Result<(), HintError> {
+    let bankai_mmr_update: BankaiMmrUpdateCairo = exec_scopes
+        .get::<BankaiMmrUpdateCairo>("bankai_mmr_update")
+        .unwrap();
+    let start_mmr_snapshot_ptr = get_relocatable_from_var_name(
+        "start_mmr_snapshot",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
+
+    bankai_mmr_update
+        .start_snapshot
+        .to_memory(vm, start_mmr_snapshot_ptr)?;
+
+    let end_mmr_snapshot_ptr = get_relocatable_from_var_name(
+        "end_mmr_snapshot",
+        vm,
+        &hint_data.ids_data,
+        &hint_data.ap_tracking,
+    )?;
+    bankai_mmr_update
+        .end_snapshot
+        .to_memory(vm, end_mmr_snapshot_ptr)?;
 
     Ok(())
 }

@@ -16,7 +16,7 @@ use clap::{Parser, ValueEnum};
 use mmr_header_accumulator_hints::{
     error::Error,
     hint_processor::CustomHintProcessor,
-    types::{BeaconMmrUpdateCairo, ExecutionMmrUpdateCairo},
+    types::{BankaiMmrUpdateCairo, BeaconMmrUpdateCairo, ExecutionMmrUpdateCairo},
 };
 use std::{io, path::Path, path::PathBuf};
 
@@ -39,6 +39,7 @@ struct Args {
 enum CliProgram {
     Beacon,
     Execution,
+    Bankai,
 }
 
 fn load_program(path: &str) -> Result<CairoProgram, Error> {
@@ -110,6 +111,38 @@ pub fn run_stwo_execution(
     let mut hint_processor = CustomHintProcessor::new();
     let mut exec_scopes = ExecutionScopes::new();
     exec_scopes.insert_value("execution_mmr_update", input);
+
+    let cairo_runner = cairo_run_program_with_initial_scope(
+        &program,
+        &cairo_run_config,
+        &mut hint_processor,
+        exec_scopes,
+    )?;
+
+    println!("{:?}", cairo_runner.get_execution_resources());
+
+    generate_stwo_files(&cairo_runner, output_dir)?;
+    Ok(())
+}
+
+pub fn run_stwo_bankai(
+    path: &str,
+    input: BankaiMmrUpdateCairo,
+    output_dir: &str,
+) -> Result<(), Error> {
+    let program = load_program(path)?;
+    let cairo_run_config = cairo_run::CairoRunConfig {
+        allow_missing_builtins: None, // Optional
+        layout: LayoutName::all_cairo_stwo,
+        relocate_mem: true,
+        trace_enabled: true,
+        proof_mode: true,
+        ..Default::default()
+    };
+
+    let mut hint_processor = CustomHintProcessor::new();
+    let mut exec_scopes = ExecutionScopes::new();
+    exec_scopes.insert_value("bankai_mmr_update", input);
 
     let cairo_runner = cairo_run_program_with_initial_scope(
         &program,
@@ -219,6 +252,15 @@ fn main() {
             let program_path = "build/execution_stwo.json";
             let output_dir = "output/";
             run_stwo_execution(program_path, input.clone(), output_dir).unwrap();
+        }
+        CliProgram::Bankai => {
+            if !stwo {
+                panic!("bankai program requires --stwo");
+            }
+            let input: BankaiMmrUpdateCairo = serde_json::from_str(&input_str).unwrap();
+            let program_path = "build/bankai_stwo.json";
+            let output_dir = "output/";
+            run_stwo_bankai(program_path, input.clone(), output_dir).unwrap();
         }
     }
 }

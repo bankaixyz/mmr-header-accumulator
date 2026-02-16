@@ -14,6 +14,9 @@ build-beacon:
 build-execution:
 	./scripts/cairo-compile.sh src/execution/execution_stwo.cairo
 
+build-bankai:
+	./scripts/cairo-compile.sh src/bankai/bankai_stwo.cairo
+
 format:
 	./scripts/format.sh
 

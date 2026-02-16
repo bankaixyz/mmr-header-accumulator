@@ -1,7 +1,7 @@
 use crate::hints::{
     input::{
-        write_beacon_input, write_execution_input, HINT_WRITE_BEACON_INPUT,
-        HINT_WRITE_EXECUTION_INPUT,
+        write_bankai_input, write_beacon_input, write_execution_input, HINT_WRITE_BANKAI_INPUT,
+        HINT_WRITE_BEACON_INPUT, HINT_WRITE_EXECUTION_INPUT,
     },
     mmr::{
         hint_is_position_in_mmr_array, mmr_bit_length, mmr_left_child,
@@ -84,6 +84,7 @@ impl HintProcessorLogic for CustomHintProcessor {
                 HINT_WRITE_EXECUTION_INPUT => {
                     write_execution_input(vm, exec_scopes, hpd, constants)
                 }
+                HINT_WRITE_BANKAI_INPUT => write_bankai_input(vm, exec_scopes, hpd, constants),
                 _ => Err(HintError::UnknownHint(
                     hint_code.to_string().into_boxed_str(),
                 )),
